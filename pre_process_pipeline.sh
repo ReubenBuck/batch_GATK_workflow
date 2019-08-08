@@ -4,7 +4,7 @@
 RECAL=false
 PERFORM=false
 
-SAMTOOLS=/cluster/software/samtools/samtools-1.9-test/bin/samtools
+SAMTOOLSMOD=samtools/samtools-1.9-test
 GATK=/cluster/software/gatk/gatk-3.8/GenomeAnalysisTK.jar
 PICARD=/cluster/software/picard-tools/picard-tools-2.1.1/picard.jar
 JAVAMOD=java/openjdk/java-1.8.0-openjdk
@@ -50,7 +50,7 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
 	shift; EMAIL=$1
 	;;
   -s | --samtools )
-	shift; SAMTOOLS=$1
+	shift; SAMTOOLSMOD=$1
 	;;
   -g | --gatk )
 	shift; GATK=$1
@@ -92,8 +92,8 @@ prepare_dirs.sh --sample=$SM \
 --read1=$R1 --read2=$R2 --path1=$D1 --path2=$D2 \
 --ref=$REF --workdir=$CWD --recal=$RECAL \
 --bam=$BAM --GVCF=$GVCF --metrics=$METRICS --log=$LOG \
---bwa=$BWAMOD --fastqc=$FASTQCMOD --pigz=$PIGZMOD --java=$JAVAMOD \
---samtools=$SAMTOOLS --gatk=$GATK --picard=$PICARD \
+--bwa=$BWAMOD --fastqc=$FASTQCMOD --pigz=$PIGZMOD --java=$JAVAMOD --samtools=$SAMTOOLSMOD \
+--gatk=$GATK --picard=$PICARD \
 --runLen=$runLen \
 --perform=$PERFORM
 
@@ -101,22 +101,22 @@ prepare_dirs.sh --sample=$SM \
 
 
 # Prepare reads for mapping
-sbatch \
---mem 10g \
---time 2-00:00 \
---job.name=$SM \
---array=1-$runLen \
--N1 \
--n20 \
-prepare_reads.sh --platform=$PL --flowcell=$FL \
---lane=$LN --library=$LB --sample=$SM \
---read1=$R1 --read2=$R2 --path1=$D1 --path2=$D2 \
---ref=$REF --workdir=$CWD --recal=$RECAL --threads 20
+#sbatch \
+#--mem 10g \
+#--time 2-00:00 \
+#--job.name=$SM \
+#--array=1-$runLen \
+#-N1 \
+#-n20 \
+#prepare_reads.sh --platform=$PL --flowcell=$FL \
+#--lane=$LN --library=$LB --sample=$SM \
+#--read1=$R1 --read2=$R2 --path1=$D1 --path2=$D2 \
+#--ref=$REF --workdir=$CWD --recal=$RECAL --threads 20
  
 
 # Map reads
 
-sbatch --array=1-$runLen map_reads.sh
+#sbatch --array=1-$runLen map_reads.sh
 
 
 

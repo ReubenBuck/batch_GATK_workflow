@@ -63,6 +63,24 @@ shift; THREADS=$1
 --runLen )
 shift; runLen=$1
 ;;
+-s | --samtools )
+shift; SAMTOOLSMOD=$1
+;;
+-g | --gatk )
+shift; GATK=$1
+;;
+-t | --picard )
+shift; PICARD=$1
+;;
+-c | --pigz )
+shift; JAVAMOD=$1
+;;
+-f | --fastqc )
+shift; FASTQCMOD=$1
+;;
+-b | --bwa )
+shift; BWAMOD=$1
+;;
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
@@ -95,6 +113,90 @@ else
     scancel -n $SM
 fi
 
+# Check for programs
+
+echo -e "\n\n$(date)\nCheck for programs\n" &>> $CWD/$SM/log/$SM.run.log
+
+module load $JAVAMOD
+java -version; javExit=$?
+if [[ $javExit = 0 ]]; then
+    echo -e "$(date)\nUsing java version:" &>> $CWD/$SM/log/$SM.run.log
+    java -version &>> $CWD/$SM/log/$SM.run.log
+    echo -e "\n" &>> $CWD/$SM/log/$SM.run.log
+else
+    echo -e "$(date)\nJava did not exit with 0 status, exiting" &>> $CWD/$SM/log/$SM.run.log
+    scancel -n $SM
+fi
+
+module load $SAMTOOLSMOD
+samtools --version; samExit=$?
+if [[ $samExit = 0 ]]; then
+    echo -e "$(date)\nUsing samtools version:" &>> $CWD/$SM/log/$SM.run.log
+    samtools --version &>> $CWD/$SM/log/$SM.run.log
+    echo -e "\n" &>> $CWD/$SM/log/$SM.run.log
+else
+    echo -e "$(date)\nSamtools did not exit with 0 status, exiting" &>> $CWD/$SM/log/$SM.run.log
+    scancel -n $SM
+fi
+
+module load $FASTQCMOD
+fastqc --version; fasExit=$?
+if [[ $fasExit = 0 ]]; then
+    echo -e "$(date)\nUsing fastqc version:" &>> $CWD/$SM/log/$SM.run.log
+    fastqc --version &>> $CWD/$SM/log/$SM.run.log
+    echo -e "\n" &>> $CWD/$SM/log/$SM.run.log
+else
+    echo -e "$(date)\nFastqc did not exit with 0 status, exiting" &>> $CWD/$SM/log/$SM.run.log
+    scancel -n $SM
+fi
+
+module load $PIGZMOD
+pigz -V; pigExit=$?
+if [[ $pigExit = 0 ]]; then
+    echo -e "$(date)\nUsing pigz version:" &>> $CWD/$SM/log/$SM.run.log
+    pigz -V &>> $CWD/$SM/log/$SM.run.log
+    echo -e "\n" &>> $CWD/$SM/log/$SM.run.log
+else
+    echo -e "$(date)\Pigz did not exit with 0 status, exiting" &>> $CWD/$SM/log/$SM.run.log
+    scancel -n $SM
+fi
+
+java -jar $GATK -version; gatExit=$?
+if [[ $gatExit = 0 ]]; then
+    echo -e "$(date)\nUsing GATK version:" &>> $CWD/$SM/log/$SM.run.log
+    java -jar $GATK -version &>> $CWD/$SM/log/$SM.run.log
+    echo -e "\n" &>> $CWD/$SM/log/$SM.run.log
+else
+    echo -e "$(date)\GATK did not exit with 0 status, exiting" &>> $CWD/$SM/log/$SM.run.log
+    scancel -n $SM
+fi
+
+module load $BWAMOD
+bwa &> $CWD/$SM/tmp/bwa.open.txt
+grep Version $CWD/$SM/tmp/bwa.open.txt > $CWD/$SM/tmp/bwa.version.txt
+if [[ $(wc -l $CWD/$SM/tmp/bwa.version.txt | cut -d" " -f1) = 1 ]]; then
+    echo -e "$(date)\nUsing BWA version:" &>> $CWD/$SM/log/$SM.run.log
+    cat $CWD/$SM/tmp/bwa.version.txt &>> $CWD/$SM/log/$SM.run.log
+    echo -e "\n" &>> $CWD/$SM/log/$SM.run.log
+else
+    echo -e "$(date)\nBWA did not report version, exiting" &>> $CWD/$SM/log/$SM.run.log
+    scancel -n $SM
+fi
+
+
+java -jar $PICARD MarkDuplicates --version &> $CWD/$SM/tmp/picard.version.txt
+if [[ $(wc -l $CWD/$SM/tmp/picard.version.txt | cut -d" " -f1) = 1 ]]; then
+    echo -e "$(date)\nUsing picard MarkDuplicates version:" &>> $CWD/$SM/log/$SM.run.log
+    cat $CWD/$SM/tmp/picard.version.txt &>> $CWD/$SM/log/$SM.run.log
+    echo -e "\n" &>> $CWD/$SM/log/$SM.run.log
+else
+    echo -e "$(date)\nPicard MarkDuplicates did not report version, exiting" &>> $CWD/$SM/log/$SM.run.log
+    scancel -n $SM
+fi
+
+echo -e "\n\n$(date)\nProgram checks complete.....\n\n\n\n" &>> $CWD/$SM/log/$SM.run.log
+
+
 # check files exist!
 # check if unaligned files exist
 echo -e "\n\n$(date)\nChecks for unaligned WGS data\n" &>> $CWD/$SM/log/$SM.run.log
@@ -122,6 +224,8 @@ for i in $(seq 0 $(($runLen - 1))); do
         fi
     fi
 done
+
+echo -e "\n\n$(date)\nData file checks complete.....\n\n\n\n" &>> $CWD/$SM/log/$SM.run.log
 
 
 # check if ref exists
@@ -178,6 +282,10 @@ else
     scancel -n $SM
 fi
 
+echo -e "\n\n$(date)\nReference file checks complete.....\n\n\n\n" &>> $CWD/$SM/log/$SM.run.log
+
+
+
 # check for final destinations and create some tests
 # make the dirs for final destinations 
 echo -e "\n\n$(date)\nChecks for final destinations\n" &>> $CWD/$SM/log/$SM.run.log
@@ -209,44 +317,8 @@ else
     scancel -n $SM
 fi
 
-module load $BWAMOD
-module load $FASTQCMOD 
-module load $PIGZMOD
-module load $JAVAMOD
+echo -e "\n\n$(date)\nFinal destination checks complete.....\n\n\n\n" &>> $CWD/$SM/log/$SM.run.log
 
-java -version
-echo $?
-
-fastqc -version
-echo $?
-
-pigz -V
-echo $?
-
-bwa &> BWAfile.version; grep Version BWAfile.version &>> $CWD/$SM/log/$SM.run.log ; rm BWAfile.version
-E=$(bwa | echo $?) # seems to give back a one
-# E will carry the exit status
-
-# what happens if a program does not work:
-# version will return nothing or an error
-# what happens if we call a program that does not exist
-
-echo $? # gets the exit status of the last command. This way we can test if there is a failure.
-
-
-java -jar $GATK -version
-echo $?
-
-
-java -jar $PICARD MarkDuplicates --versi &> jav.v
-# piccard don't work so well
-# need to check if result is one line long
-
-
-$SAMTOOLS --version ; echo $?
-
-
-if [[ $(echo $?) > 0 ]]; then echo yes; else echo no ; fi
 
 
 
