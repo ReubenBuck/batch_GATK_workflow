@@ -63,32 +63,51 @@ shift; THREADS=$1
 --runLen )
 shift; runLen=$1
 ;;
--s | --samtools )
+--samtools )
 shift; SAMTOOLSMOD=$1
 ;;
--g | --gatk )
+--gatk )
 shift; GATK=$1
 ;;
--t | --picard )
+--picard )
 shift; PICARD=$1
 ;;
--c | --pigz )
-shift; JAVAMOD=$1
+--pigz )
+shift; PIGZMOD=$1
 ;;
--f | --fastqc )
+--fastqc )
 shift; FASTQCMOD=$1
 ;;
--b | --bwa )
+--bwa )
 shift; BWAMOD=$1
+;;
+--java )
+shift; JAVAMOD=$1
+;;
+--perform )
+shift; PERFORM=$1
+;;
+--bqsr )
+shift; BQSR=$1
 ;;
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
 
+
+echo $SM
+echo $REF
+echo $PL
+echo $FL
+echo $LN
+echo $LB
+echo $PERFORM
+echo $GATK
+
 # clean and establish the working dir
 echo -e "\n\n$(date)\nChecks for clean working dir\n" &>> $CWD/$SM/log/$SM.run.log
 if [[ ! -z $(ls $CWD/$SM/) ]]; then
-    rm -r $CWD/$SM/*
+#    rm -r $CWD/$SM/*
     mkdir -p $CWD/$SM/log
     echo -e "$(date)\ndir $CWD/$SM/ is not empty, removing files\n" &>> $CWD/$SM/log/$SM.run.log
 else
@@ -101,6 +120,9 @@ mkdir -p $CWD/$SM/metrics
 mkdir -p $CWD/$SM/gvcf
 mkdir -p $CWD/$SM/tmp
 
+
+echo -e "running on $(hostname)"
+
 # here we can start measuring performance stats
 echo -e "\n\n$(date)\nChecks for performance\n" &>> $CWD/$SM/log/$SM.run.log
 if [[ $PERFORM = true ]]; then
@@ -109,7 +131,7 @@ if [[ $PERFORM = true ]]; then
 elif [[ $PERFORM = false ]]; then
     echo -e "$(date)\nPerformance metrics not recorded\n" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\nPerformance var is $REACL, requires true/false, exiting\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\nPerformance var is $PERFORM, requires true/false, exiting\n" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi
 
@@ -200,7 +222,7 @@ echo -e "\n\n$(date)\nProgram checks complete.....\n\n\n\n" &>> $CWD/$SM/log/$SM
 # check files exist!
 # check if unaligned files exist
 echo -e "\n\n$(date)\nChecks for unaligned WGS data\n" &>> $CWD/$SM/log/$SM.run.log
-for i in $(seq 0 $(($runLen - 1))); do
+for i in $(seq 1 $(($runLen - 1))); do
     if [[ $D2 = *".bam" ]]; then
         if [[ -e $D1/$D2 ]]; then
             echo -e "$(date)\nbam file $D2/$D1 found\n" &>> $CWD/$SM/log/$SM.run.log
@@ -216,10 +238,10 @@ for i in $(seq 0 $(($runLen - 1))); do
             scancel -n $SM
         fi
     else
-        if [[ -e $D1/$R1.gz && -e $D2/$R2.gz ]]; then
-            echo -e "$(date)\nfastq files $D1/$R1.gz and $D2/$R2.gz found\n" &>> $CWD/$SM/log/$SM.run.log
+        if [[ -e ${D1arr[$i]}/${R1arr[$i]}.gz && -e ${D2arr[$i]}/${R2arr[$i]}.gz ]]; then
+            echo -e "$(date)\nfastq files ${D1arr[$i]}/${R1arr[$i]}.gz and ${D2arr[$i]}/${R2arr[$i]}.gz found\n" &>> $CWD/$SM/log/$SM.run.log
         else
-            echo -e "$(date)\nfastq files $D1/$R1.gz and $D2/$R2.gz found, exiting\n" &>> $CWD/$SM/log/$SM.run.log
+            echo -e "$(date)\nfastq files ${D1arr[$i]}/${R1arr[$i]}.gz and ${D2arr[$i]}/${R2arr[$i]}.gz not found, exiting\n" &>> $CWD/$SM/log/$SM.run.log
             scancel -n $SM
         fi
     fi
@@ -244,7 +266,7 @@ else
     scancel -n $SM
 fi
 
-if [[ -e $REF.dict ]]; then
+if [[ -e ${REF/.fa/}.dict ]]; then
     echo -e "$(date)\ndict file found\n" &>> $CWD/$SM/log/$SM.run.log
 else
     echo -e "$(date)\ndict file not found, exiting\n" &>> $CWD/$SM/log/$SM.run.log
@@ -268,17 +290,17 @@ fi
 
 # check if recal db exists if recal is required
 echo -e "\n\n$(date)\nChecks for BQSR\n" &>> $CWD/$SM/log/$SM.run.log
-if [[ $RECAL = true ]]; then
+if [[ $BQSR = true ]]; then
     if [[ -e $RECAL ]]; then
         echo -e "$(date)\nBQSR DB found\n" &>> $CWD/$SM/log/$SM.run.log
     else
         echo -e "$(date)\nBQSR DB required and not found, exiting\n" &>> $CWD/$SM/log/$SM.run.log
         scancel -n $SM
     fi
-elif [[ $RECAL = false ]]; then
+elif [[ $BQSR = false ]]; then
     echo -e "$(date)\nBQSR is not required from user\n" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\nBQSR var is $REACL, requires true/false, exiting\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\nBQSR var is $BQSR, requires true/false, exiting\n" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi
 

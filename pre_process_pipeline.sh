@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # set defults for unused options
-RECAL=false
+BQSR=false
 PERFORM=false
 
 SAMTOOLSMOD=samtools/samtools-1.9-test
@@ -14,7 +14,7 @@ BWAMOD=bwa/bwa-0.7.17
 
 # need to read in the config file! 
 while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
-  -c | --congif )
+  -c | --config )
     shift; CONFIG=$1
     SM=$(cat $CONFIG | sed '2q;d' | awk {'print $1'}) # pulls out first row of config col 1
     LB=$(echo $(cat $CONFIG | cut -f2) | sed 's/ /,/g') # pulls out entire col 2 and converts to comma sep values
@@ -82,20 +82,27 @@ fi
 # and account and email
 
 
+echo $LN
+echo $R1
+echo $REF
+echo $PERFORM
+
+ 
+
+
 # prepare dirs
 sbatch \
---mem=10g --time=2-00:00 --nodes=1 -ntasks=20 \
+--mem=10g --time=2-00:00 --nodes=1 --ntasks=1 \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
---mail-user=$EMAIL --mail-type=FAIL --output=prepare_dirs-${SM}-%j.out \
-prepare_dirs.sh --sample=$SM \
---platform=$PL --flowcell=$FL --lane=$LN --library=$LB \
---read1=$R1 --read2=$R2 --path1=$D1 --path2=$D2 \
---ref=$REF --workdir=$CWD --recal=$RECAL \
---bam=$BAM --GVCF=$GVCF --metrics=$METRICS --log=$LOG \
---bwa=$BWAMOD --fastqc=$FASTQCMOD --pigz=$PIGZMOD --java=$JAVAMOD --samtools=$SAMTOOLSMOD \
---gatk=$GATK --picard=$PICARD \
---runLen=$runLen \
---perform=$PERFORM
+--mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=prepare_dirs-${SM}-%j.out \
+/home/buckleyrm/scripts/batch_GATK_workflow/tasks/prepare_dirs.sh --sample $SM \
+--platform $PL --flowcell $FC --lane $LN --library $LB \
+--read1 $R1 --read2 $R2 --path1 $D1 --path2 $D2 \
+--ref $REF --workdir $CWD --recal $RECAL --bam $BAM \
+--gvcf $GVCF --metrics $METRICS --log $LOG \
+--bwa $BWAMOD --fastqc $FASTQCMOD --pigz $PIGZMOD --java $JAVAMOD \
+--samtools $SAMTOOLSMOD --gatk $GATK --picard $PICARD \
+--runLen $runLen --perform $PERFORM --bqsr $BQSR \
 
 
 
