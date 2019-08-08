@@ -95,20 +95,16 @@ if [[ "$1" == '--' ]]; then shift; fi
 
 
 
-echo $SM
-echo $REF
-echo $PL
-echo $FL
-echo $LN
-echo $LB
-echo $PERFORM
-echo $GATK
-
 # clean and establish the working dir
 echo -e "\n\n$(date)\nChecks for clean working dir\n" &>> $CWD/$SM/log/$SM.run.log
 if [[ ! -z $(ls $CWD/$SM/) ]]; then
-#    rm -r $CWD/$SM/*
-    mkdir -p $CWD/$SM/log
+    if [[ $CWD = "" || $SM = "" ]]; then
+        echo "Working dir names are empty, exiting"
+        scancel -n $SM
+    else
+        rm -r $CWD/$SM/*
+        mkdir -p $CWD/$SM/log
+    fi
     echo -e "$(date)\ndir $CWD/$SM/ is not empty, removing files\n" &>> $CWD/$SM/log/$SM.run.log
 else
     mkdir -p $CWD/$SM/log
@@ -121,12 +117,13 @@ mkdir -p $CWD/$SM/gvcf
 mkdir -p $CWD/$SM/tmp
 
 
-echo -e "running on $(hostname)"
+echo -e "prepare_dirs.sh is running on $(hostname)" &>> $CWD/$SM/log/$SM.run.log
 
 # here we can start measuring performance stats
 echo -e "\n\n$(date)\nChecks for performance\n" &>> $CWD/$SM/log/$SM.run.log
 if [[ $PERFORM = true ]]; then
     echo -e "$(date)\nSetting up task performance metrics\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "prepare_dirs.sh is running on $(hostname)" >  $CWD/$SM/log/perform_prepare_dirs_$SM.txt
     vmstat -twn -S m 1 >> $CWD/$SM/log/perform_prepare_dirs_$SM.txt &
 elif [[ $PERFORM = false ]]; then
     echo -e "$(date)\nPerformance metrics not recorded\n" &>> $CWD/$SM/log/$SM.run.log
@@ -140,6 +137,12 @@ fi
 echo -e "\n\n$(date)\nCheck for programs\n" &>> $CWD/$SM/log/$SM.run.log
 
 module load $JAVAMOD
+module load $SAMTOOLSMOD
+module load $FASTQCMOD
+module load $PIGZMOD
+module load $BWAMOD
+
+
 java -version; javExit=$?
 if [[ $javExit = 0 ]]; then
     echo -e "$(date)\nUsing java version:" &>> $CWD/$SM/log/$SM.run.log
@@ -150,7 +153,6 @@ else
     scancel -n $SM
 fi
 
-module load $SAMTOOLSMOD
 samtools --version; samExit=$?
 if [[ $samExit = 0 ]]; then
     echo -e "$(date)\nUsing samtools version:" &>> $CWD/$SM/log/$SM.run.log
@@ -161,7 +163,6 @@ else
     scancel -n $SM
 fi
 
-module load $FASTQCMOD
 fastqc --version; fasExit=$?
 if [[ $fasExit = 0 ]]; then
     echo -e "$(date)\nUsing fastqc version:" &>> $CWD/$SM/log/$SM.run.log
@@ -172,7 +173,6 @@ else
     scancel -n $SM
 fi
 
-module load $PIGZMOD
 pigz -V; pigExit=$?
 if [[ $pigExit = 0 ]]; then
     echo -e "$(date)\nUsing pigz version:" &>> $CWD/$SM/log/$SM.run.log
@@ -193,7 +193,6 @@ else
     scancel -n $SM
 fi
 
-module load $BWAMOD
 bwa &> $CWD/$SM/tmp/bwa.open.txt
 grep Version $CWD/$SM/tmp/bwa.open.txt > $CWD/$SM/tmp/bwa.version.txt
 if [[ $(wc -l $CWD/$SM/tmp/bwa.version.txt | cut -d" " -f1) = 1 ]]; then
