@@ -36,6 +36,9 @@ shift; SAMTOOLSMOD=$1
 --bwa )
 shift; BWAMOD=$1
 ;;
+--ref )
+shift; REF=$1
+;;
 --perform )
 shift; PERFORM=$1
 ;;
@@ -56,7 +59,7 @@ R2=${R2arr[$TASK]}
 FC=${FCarr[$TASK]}
 LN=${LNarr[$TASK]}
 LB=${LBarr[$TASK]}
-PL=${LBarr[$TASK]}
+PL=${PLarr[$TASK]}
 
 # here we can start measuring performance stats
 if [[ $PERFORM = true ]]; then
@@ -71,17 +74,17 @@ fi
 
 
 #set up read groups
-RG="@RG\tID:${LB}.${FC}.${LN}\tPU:${LB}.${FC}.${LN}\tSM:${SM}\tPL:${$PL};LB:${LB}"
+RG="@RG\tID:${LB}.${FC}.${LN}\tPU:${LB}.${FC}.${LN}\tSM:${SM}\tPL:${PL}\tLB:${LB}"
 
 echo -e "$(date)\nBegin mapping for $SM task $TASK with read group:\n$RG\n" &>> $CWD/$SM/log/$SM.run.log
 	
-(bwa mem -M -R $RG -t $THREADS $REF $CWD/$SM/fastq/$R1 $CWD/$SM/fastq/$R2 | samtools view -Sb - > $CWD/$SM/$SM.$TASK.bam) 2> $CWD/$SM/log/$SM.$TASK.bwa.log
+(bwa mem -M -R $RG -t $THREADS $REF $CWD/$SM/fastq/$R1 $CWD/$SM/fastq/$R2 | samtools view -Sb - > $CWD/$SM/bam/$SM.$TASK.bam) 2> $CWD/$SM/log/$SM.$TASK.bwa.log
 
-if [[ -s $CWD/$SM/$SM.$TASK.bam ]]; then
-	samtools flagstat -@ $THREADS $CWD/$SM/$SM.$TASK.bam &>> $CWD/$SM/metrics/$SM.$TASK.flagstat.txt
+if [[ $(wc -c <$CWD/$SM/bam/$SM.$TASK.bam) -ge 1000 ]]; then
+	samtools flagstat -@ $THREADS $CWD/$SM/bam/$SM.$TASK.bam &>> $CWD/$SM/metrics/$SM.$TASK.flagstat.txt
 	echo -e "$(date)\nMapping for $SM task $TASK with read group:\n$RG\nis complete\n" &>> $CWD/$SM/log/$SM.run.log
 else
-	echo -e "$(date)\nNo bam file found for $SM task $TASK, exiting\n"
+	echo -e "$(date)\nBam file not found or too small for $SM task $TASK, exiting\n" &>> $CWD/$SM/log/$SM.run.log
 	scancel -n $SM
 fi
 
