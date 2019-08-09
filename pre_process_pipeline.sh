@@ -104,26 +104,17 @@ sbatch \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/prepare_reads.sh --sample $SM \
 --read1 $R1 --read2 $R2 --path1 $D1 --path2 $D2 --threads 10 \
 --workdir $CWD --fastqc $FASTQCMOD --pigz $PIGZMOD \
---samtools $SAMTOOLSMOD --runLen $runLen --perform $PERFORM \
-
-
-# Prepare reads for mapping
-#sbatch \
-#--mem 10g \
-#--time 2-00:00 \
-#--job.name=$SM \
-#--array=1-$runLen \
-#-N1 \
-#-n20 \
-#prepare_reads.sh --platform=$PL --flowcell=$FL \
-#--lane=$LN --library=$LB --sample=$SM \
-#--read1=$R1 --read2=$R2 --path1=$D1 --path2=$D2 \
-#--ref=$REF --workdir=$CWD --recal=$RECAL --threads 20
- 
+--samtools $SAMTOOLSMOD --perform $PERFORM \
 
 # Map reads
-
-#sbatch --array=1-$runLen map_reads.sh
+sbatch \
+--mem=10g --time=2-00:00 --nodes=1 --ntasks=10 --array=1-$runLen \
+--job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
+--mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=map_reads-${SM}-${TASKS}-%A-%a.out \
+/home/buckleyrm/scripts/batch_GATK_workflow/tasks/map_reads.sh --sample $SM \
+--read1 $R1 --read2 $R2 --threads 10 \
+--workdir $CWD --bwa $BWAMOD --samtools $SAMTOOLSMOD --perform $PERFORM \
+--flowcell $FC --lane $LN --library $LB --platform $PL --ref $REF \
 
 
 

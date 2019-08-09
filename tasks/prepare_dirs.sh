@@ -5,8 +5,8 @@ shift; PL=$1
 IFS=', ' read -r -a PLarr <<< "$PL"
 ;;
 --flowcell )
-shift; FL=$1
-IFS=', ' read -r -a FLarr <<< "$FL"
+shift; FC=$1
+IFS=', ' read -r -a FCarr <<< "$FC"
 ;; 
 --lane )
 shift; LN=$1
@@ -121,7 +121,7 @@ echo -e "prepare_dirs.sh is running on $(hostname)" &>> $CWD/$SM/log/$SM.run.log
 echo -e "\n\n$(date)\nChecks for performance\n" &>> $CWD/$SM/log/$SM.run.log
 if [[ $PERFORM = true ]]; then
     echo -e "$(date)\nSetting up task performance metrics\n" &>> $CWD/$SM/log/$SM.run.log
-    echo -e "prepare_dirs.sh is running on $(hostname)" >  $CWD/$SM/metrics/perform_prepare_dirs_$SM.txt
+    echo -e "$(date): prepare_dirs.sh is running on $(hostname)" >  $CWD/$SM/metrics/perform_prepare_dirs_$SM.txt
     vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_prepare_dirs_$SM.txt &
 elif [[ $PERFORM = false ]]; then
     echo -e "$(date)\nPerformance metrics not recorded\n" &>> $CWD/$SM/log/$SM.run.log

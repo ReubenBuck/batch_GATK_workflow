@@ -1,17 +1,90 @@
-echo begin mapping &>> $LOGDIR/$START/$SM/$SM.run.log
-	# perform mapping
-	(bwa mem -M -R $RG -t $THREADS $IDX $FQDIR/$SM/$R1 $FQDIR/$SM/$R2 | samtools view -Sb - > $MAPDIR/$SM/$SM.$ROW.bam) 2> $LOGDIR/$START/$SM/$SM.$ROW.aln.log
+#!/bin/bash
+while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
+--sample )
+shift; SM=$1
+;;
+--read1 )
+shift; R1=$1
+IFS=', ' read -r -a R1arr <<< "$R1"
+;;
+--read2 )
+shift; R2=$1
+IFS=', ' read -r -a R2arr <<< "$R2"
+;;
+--platform )
+shift; PL=$1
+IFS=', ' read -r -a PLarr <<< "$PL"
+;;
+--flowcell )
+shift; FC=$1
+IFS=', ' read -r -a FCarr <<< "$FC"
+;;
+--lane )
+shift; LN=$1
+IFS=', ' read -r -a LNarr <<< "$LN"
+;;
+--library )
+shift; LB=$1
+IFS=', ' read -r -a LBarr <<< "$LB"
+;;
+--threads )
+shift; THREADS=$1
+;;
+--samtools )
+shift; SAMTOOLSMOD=$1
+;;
+--bwa )
+shift; BWAMOD=$1
+;;
+--perform )
+shift; PERFORM=$1
+;;
+--workdir )
+shift; CWD=$1
+;;
+esac; shift; done
+if [[ "$1" == '--' ]]; then shift; fi
 
-	#check for bam files and remove fastq files once reads are mapped
-	if [ -s $MAPDIR/$SM/$SM.$ROW.bam ]
-	then 
-		echo bam file found, removing $FQDIR/$SM/{$R1,$R2} &>> $LOGDIR/$START/$SM/$SM.run.log
-		rm -r $FQDIR/$SM/{$R1,$R2}
-	else
-		echo bam file not found or is empty, exiting &>> $LOGDIR/$START/$SM/$SM.run.log
-		exit
-	fi
+module load $SAMTOOLSMOD
+module load $BWAMOD
 
-	echo end mapping &>> $LOGDIR/$START/$SM/$SM.run.log
+TASK=${SLURM_ARRAY_TASK_ID}
 
-done
+R1=${R1arr[$TASK]}
+R2=${R2arr[$TASK]}
+
+FC=${FCarr[$TASK]}
+LN=${LNarr[$TASK]}
+LB=${LBarr[$TASK]}
+PL=${LBarr[$TASK]}
+
+# here we can start measuring performance stats
+if [[ $PERFORM = true ]]; then
+    echo -e "$(date): map_reads.sh task $TASK is running on $(hostname)" &>>  $CWD/$SM/metrics/perform_map_reads_$SM.$TASK.txt
+    vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_map_reads_$SM.$TASK.txt &
+elif [[ $PERFORM = false ]]; then
+    echo -e "$(date)\nPerformance metrics not recorded\n" &>> $CWD/$SM/log/$SM.run.log
+else
+    echo -e "$(date)\nPerformance var is $PERFORM, requires true/false, exiting\n" &>> $CWD/$SM/log/$SM.run.log
+    scancel -n $SM
+fi
+
+
+#set up read groups
+RG="@RG\tID:${LB}.${FC}.${LN}\tPU:${LB}.${FC}.${LN}\tSM:${SM}\tPL:${$PL};LB:${LB}"
+
+echo -e "$(date)\nBegin mapping for $SM task $TASK with read group:\n$RG\n" &>> $CWD/$SM/log/$SM.run.log
+	
+(bwa mem -M -R $RG -t $THREADS $REF $CWD/$SM/fastq/$R1 $CWD/$SM/fastq/$R2 | samtools view -Sb - > $CWD/$SM/$SM.$TASK.bam) 2> $CWD/$SM/log/$SM.$TASK.bwa.log
+
+if [[ -s $CWD/$SM/$SM.$TASK.bam ]]; then
+	samtools flagstat -@ $THREADS $CWD/$SM/$SM.$TASK.bam &>> $CWD/$SM/metrics/$SM.$TASK.flagstat.txt
+	echo -e "$(date)\nMapping for $SM task $TASK with read group:\n$RG\nis complete\n" &>> $CWD/$SM/log/$SM.run.log
+else
+	echo -e "$(date)\nNo bam file found for $SM task $TASK, exiting\n"
+	scancel -n $SM
+fi
+
+
+
+

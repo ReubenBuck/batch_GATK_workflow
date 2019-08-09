@@ -19,17 +19,11 @@ IFS=', ' read -r -a D1arr <<< "$D1"
 shift; D2=$1
 IFS=', ' read -r -a D2arr <<< "$D2"
 ;;
---workdir )
-shift; CWD=$1
-;;
 --pigz )
 shift; PIGZMOD=$1
 ;;
 --threads )
 shift; THREADS=$1
-;;
---runLen )
-shift; runLen=$1
 ;;
 --samtools )
 shift; SAMTOOLSMOD=$1
@@ -63,7 +57,7 @@ echo -e "$(date)\nprepare_reads.$TASK.sh is running on $(hostname)\n" &>> $CWD/$
 
 # here we can start measuring performance stats
 if [[ $PERFORM = true ]]; then
-    echo -e "prepare_reads.sh is running on $(hostname)" &>>  $CWD/$SM/metrics/perform_prepare_reads_$SM.$TASK.txt
+    echo -e "$(date): prepare_reads.sh task $TASK is running on $(hostname)" &>>  $CWD/$SM/metrics/perform_prepare_reads_$SM.$TASK.txt
     vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_prepare_reads_$SM.$TASK.txt &
 elif [[ $PERFORM = false ]]; then
     echo -e "$(date)\nPerformance metrics not recorded\n" &>> $CWD/$SM/log/$SM.run.log
