@@ -65,11 +65,6 @@ PL=${PLarr[$TASK]}
 if [[ $PERFORM = true ]]; then
     echo -e "$(date): map_reads.sh task $TASK is running on $(hostname)" &>>  $CWD/$SM/metrics/perform_map_reads_$SM.$TASK.txt
     vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_map_reads_$SM.$TASK.txt &
-elif [[ $PERFORM = false ]]; then
-    echo -e "$(date)\nPerformance metrics not recorded\n" &>> $CWD/$SM/log/$SM.run.log
-else
-    echo -e "$(date)\nPerformance var is $PERFORM, requires true/false, exiting\n" &>> $CWD/$SM/log/$SM.run.log
-    scancel -n $SM
 fi
 
 
