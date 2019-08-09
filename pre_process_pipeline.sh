@@ -125,6 +125,12 @@ sbatch \
 --threads 10 --runLen $runLen \
 --workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM \
 
-
+# mark_duplicates.sh
+sbatch \
+--mem=10g --time=2-00:00 --nodes=1 --ntasks=10 \
+--job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
+--mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/mark_duplicates-${SM}-%j.out \
+/home/buckleyrm/scripts/batch_GATK_workflow/tasks/mark_duplicates.sh --sample $SM \
+--workdir $CWD --picard $PICARD --java $JAVAMOD --perform $PERFORM \
 
 

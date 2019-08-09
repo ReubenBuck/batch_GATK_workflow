@@ -50,7 +50,7 @@ D2=${D2arr[$TASK]}
 
 echo $CWD
 
-echo -e "$(date)\nVariables in prepare_reads.sh task $TASK have been assigned as,\nR1 is ${R1}\nR2 is ${R2}\nD1 is ${D1}\nD2 is ${D2}\n" > $CWD/$SM/log/$SM.$TASK.prepare_reads.log
+echo -e "$(date)\nVariables in prepare_reads.sh task $TASK have been assigned as,\nR1 is ${R1}\nR2 is ${R2}\nD1 is ${D1}\nD2 is ${D2}\n" > $CWD/$SM/log/$SM.prepare_reads.$TASK.log
 
 
 echo -e "$(date)\nprepare_reads.$TASK.sh is running on $(hostname)\n" &>> $CWD/$SM/log/$SM.run.log
@@ -66,16 +66,14 @@ module load $SAMTOOLSMOD
 module load $FASTQCMOD
 module load $PIGZMOD
 
-# need to make log dirs specific for the file
-touch $CWD/$SM/log/$SM.$TASK.prepare_reads.log
 
 if [[ $D2 = *".bam" ]]; then
 	echo -e "$(date)\nData is storred in unaligned bam format, converting to fastq\n" &>> $CWD/$SM/log/$SM.run.log
-	samtools fastq --threads $THREADS -1 $FQDIR/$SM/$R1 -2 $FQDIR/$SM/$R2 $D1/$D2 &>> $CWD/$SM/log/$SM.$TASK.prepare_reads.log
+	samtools fastq --threads $THREADS -1 $FQDIR/$SM/$R1 -2 $FQDIR/$SM/$R2 $D1/$D2 &>> $CWD/$SM/log/$SM.prepare_reads.$TASK.log
 elif [[ $D2 = *".cram" ]]; then
 	echo -e "$(date)\nData is storred in cram format, converting to fastq\n" &>> $CWD/$SM/log/$SM.run.log
-	samtools view -@ $THREADS -b -o $CWD/$SM/tmp/${D1/cram/bam} $D1/$D2 &>> $CWD/$SM/log/$SM.$TASK.prepare_reads.log
-	samtools fastq --threads $THREADS -1 $CWD/$SM/fastq/$R1 -2 $FQDIR/$SM/fastq/$R2 $CWD/$SM/tmp/${D1/cram/bam} &>> $CWD/$SM/log/$SM.$TASK.prepare_reads.log
+	samtools view -@ $THREADS -b -o $CWD/$SM/tmp/${D1/cram/bam} $D1/$D2 &>> $CWD/$SM/log/$SM.prepare_reads.$TASK.log
+	samtools fastq --threads $THREADS -1 $CWD/$SM/fastq/$R1 -2 $FQDIR/$SM/fastq/$R2 $CWD/$SM/tmp/${D1/cram/bam} &>> $CWD/$SM/log/$SM.prepare_reads.$TASK.log
 else
 	echo -e "$(date)\nData is likely storred as compressed fastq, uncompressing\n" &>> $CWD/$SM/log/$SM.run.log
 	pigz -cd -p $THREADS $D1/$R1.gz > $CWD/$SM/fastq/$R1
@@ -96,4 +94,4 @@ echo -e "$(date)\nFastqc quality checks for task no. $TASK ...\n" &>> $CWD/$SM/l
 fastqc -o $CWD/$SM/metrics -d $CWD/$SM/tmp -t $THREADS $CWD/$SM/fastq/$R1 $CWD/$SM/fastq/$R2
 
 echo -e "$(date)\nReads are prepared for mapping for task no. $TASK \n" &>> $CWD/$SM/log/$SM.run.log
-echo -e "$(date)\nReads are prepared for mapping for task no. $TASK \n" &>> $CWD/$SM/log/$SM.$TASK.prepare_reads.log
+echo -e "$(date)\nReads are prepared for mapping for task no. $TASK \n" &>> $CWD/$SM/log/$SM.prepare_reads.$TASK.log
