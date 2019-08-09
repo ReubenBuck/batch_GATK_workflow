@@ -40,6 +40,9 @@ shift; PERFORM=$1
 --fastqc )
 shift; FASTQCMOD=$1
 ;;
+--workdir )
+shift; CWD=$1
+;;
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
@@ -51,7 +54,9 @@ R2=${R2arr[$TASK]}
 D1=${D1arr[$TASK]}
 D2=${D2arr[$TASK]}
 
-echo -e "$(date)\nVariables in prepare_reads.sh task $TASK have been assigned as,\nR1 is ${R1}\nR2 is ${R2}\nD1 is ${D1}\nD2 is ${D2}\n">  $CWD/$SM/metrics/perform_prepare_reads_$SM.$TASK.txt
+echo $CWD
+
+echo -e "$(date)\nVariables in prepare_reads.sh task $TASK have been assigned as,\nR1 is ${R1}\nR2 is ${R2}\nD1 is ${D1}\nD2 is ${D2}\n" > $CWD/$SM/log/$SM.$TASK.prepare_reads.log
 
 
 echo -e "$(date)\nprepare_reads.$TASK.sh is running on $(hostname)\n" &>> $CWD/$SM/log/$SM.run.log
@@ -59,7 +64,7 @@ echo -e "$(date)\nprepare_reads.$TASK.sh is running on $(hostname)\n" &>> $CWD/$
 # here we can start measuring performance stats
 if [[ $PERFORM = true ]]; then
     echo -e "prepare_reads.sh is running on $(hostname)" &>>  $CWD/$SM/metrics/perform_prepare_reads_$SM.$TASK.txt
-    vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_prepare_dirs_$SM.$TASK.txt &
+    vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_prepare_reads_$SM.$TASK.txt &
 elif [[ $PERFORM = false ]]; then
     echo -e "$(date)\nPerformance metrics not recorded\n" &>> $CWD/$SM/log/$SM.run.log
 else

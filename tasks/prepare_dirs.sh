@@ -94,8 +94,7 @@ if [[ "$1" == '--' ]]; then shift; fi
 
 
 
-# clean and establish the working dir
-echo -e "\n\n$(date)\nChecks for clean working dir\n" &>> $CWD/$SM/log/$SM.run.log
+#clean and establish the working dir
 if [[ ! -z $(ls $CWD/$SM/) ]]; then
     if [[ $CWD = "" || $SM = "" ]]; then
         echo "Working dir names are empty, exiting"
@@ -220,7 +219,7 @@ echo -e "\n\n$(date)\nProgram checks complete.....\n\n\n\n" &>> $CWD/$SM/log/$SM
 # check files exist!
 # check if unaligned files exist
 echo -e "\n\n$(date)\nChecks for unaligned WGS data\n" &>> $CWD/$SM/log/$SM.run.log
-for i in $(seq 1 $(($runLen - 1))); do
+for i in $(seq 1 $runLen); do
     if [[ $D2 = *".bam" ]]; then
         if [[ -e $D1/$D2 ]]; then
             echo -e "$(date)\nbam file $D2/$D1 found\n" &>> $CWD/$SM/log/$SM.run.log
@@ -310,30 +309,30 @@ echo -e "\n\n$(date)\nReference file checks complete.....\n\n\n\n" &>> $CWD/$SM/
 # make the dirs for final destinations 
 echo -e "\n\n$(date)\nChecks for final destinations\n" &>> $CWD/$SM/log/$SM.run.log
 if [[ -d $BAM ]]; then
-    echo -e "$(data)\nFinal bam dir, $BAM, found\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\nFinal bam dir, $BAM, found\n" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(data)\nFinal bam dir, $BAM, not found, exiting\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\nFinal bam dir, $BAM, not found, exiting\n" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi
 
 if [[ -d $GVCF ]]; then
-    echo -e "$(data)\nFinal GVCF dir, $GVCF, found\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\nFinal GVCF dir, $GVCF, found\n" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(data)\nFinal GVCF dir, $GVCF, not found, exiting\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\nFinal GVCF dir, $GVCF, not found, exiting\n" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi
 
 if [[ -d $LOG ]]; then
-    echo -e "$(data)\nFinal log dir, $LOG, found\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\nFinal log dir, $LOG, found\n" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(data)\nFinal log dir, $LOG, not found, exiting\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\nFinal log dir, $LOG, not found, exiting\n" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi
 
 if [[ -d $METRICS ]]; then
-    echo -e "$(data)\nFinal metrics dir, $METRICS, found\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\nFinal metrics dir, $METRICS, found\n" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(data)\nFinal metrics dir, $METRICS, not found, exiting\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\nFinal metrics dir, $METRICS, not found, exiting\n" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi
 
