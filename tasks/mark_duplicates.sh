@@ -33,7 +33,7 @@ java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $PICARD MarkDuplicates \
 TMP_DIR=$CWD/$SM/tmp \
 INPUT=$CWD/$SM/bam/$SM.sort.bam \
 OUTPUT=$CWD/$SM/bam/$SM.markdup.bam \
-METRICS_FILE=$CWD/SM/metrics/$SM.markdup.metrics \
+METRICS_FILE=$CWD/$SM/metrics/$SM.markdup.metrics \
 OPTICAL_DUPLICATE_PIXEL_DISTANCE=2500 &>> $CWD/$SM/log/$SM.markdup.log
 
 if [[ $(wc -c <$CWD/$SM/bam/$SM.markdup.bam) -ge 1000 ]]; then
