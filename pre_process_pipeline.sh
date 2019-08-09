@@ -118,7 +118,7 @@ sbatch \
 
 # merge_sort_bams
 sbatch \
---mem=10g --time=2-00:00 --nodes=1 --ntasks=10 --array=1-$runLen \
+--mem=10g --time=2-00:00 --nodes=1 --ntasks=10 \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/merge_sort_bams-${SM}-%j.out \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/merge_sort_bams.sh --sample $SM \

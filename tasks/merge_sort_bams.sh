@@ -30,7 +30,7 @@ if [[ $PERFORM = true ]]; then
 fi
 
 # merging
-echo -e "$(date)\nMerge $runLen bams for sample $SM\n" &>> $CWD/$SM/log/$SM.run.lof
+echo -e "$(date)\nMerge $runLen bams for sample $SM\n" &>> $CWD/$SM/log/$SM.run.log
 
 eval samtools merge -c -f --threads $THREADS $CWD/$SM/bam/$SM.bam $CWD/$SM/bam/$SM.{1..$runLen}.bam &>> $CWD/$SM/log/$SM.merge.log
 
@@ -42,7 +42,7 @@ else
 fi
 
 # sort
-echo -e "$(date)\nSort $SM bam\n" &>> $CWD/$SM/log/$SM.run.lof
+echo -e "$(date)\nSort $SM bam\n" &>> $CWD/$SM/log/$SM.run.log
 samtools sort --threads $THREADS -o $CWD/$SM/bam/$SM.sort.bam $CWD/$SM/bam/$SM.bam &>> $CWD/$SM/log/$SM.sort.log
 
 
