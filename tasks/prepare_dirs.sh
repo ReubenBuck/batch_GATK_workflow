@@ -1,5 +1,4 @@
 #!/bin/bash
-# read in all of the outside flags
 while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
 --platform )
 shift; PL=$1
@@ -123,8 +122,8 @@ echo -e "prepare_dirs.sh is running on $(hostname)" &>> $CWD/$SM/log/$SM.run.log
 echo -e "\n\n$(date)\nChecks for performance\n" &>> $CWD/$SM/log/$SM.run.log
 if [[ $PERFORM = true ]]; then
     echo -e "$(date)\nSetting up task performance metrics\n" &>> $CWD/$SM/log/$SM.run.log
-    echo -e "prepare_dirs.sh is running on $(hostname)" >  $CWD/$SM/log/perform_prepare_dirs_$SM.txt
-    vmstat -twn -S m 1 >> $CWD/$SM/log/perform_prepare_dirs_$SM.txt &
+    echo -e "prepare_dirs.sh is running on $(hostname)" >  $CWD/$SM/metrics/perform_prepare_dirs_$SM.txt
+    vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_prepare_dirs_$SM.txt &
 elif [[ $PERFORM = false ]]; then
     echo -e "$(date)\nPerformance metrics not recorded\n" &>> $CWD/$SM/log/$SM.run.log
 else

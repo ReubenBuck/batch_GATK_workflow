@@ -104,7 +104,15 @@ sbatch \
 --samtools $SAMTOOLSMOD --gatk $GATK --picard $PICARD \
 --runLen $runLen --perform $PERFORM --bqsr $BQSR \
 
-
+# prepare reads
+sbatch \
+--mem=10g --time=2-00:00 --nodes=1 --ntasks=10 \
+--job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
+--mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=prepare_reads-${SM}-${TASKS}-%A-%a.out \
+/home/buckleyrm/scripts/batch_GATK_workflow/tasks/prepare_reads.sh --sample $SM \
+--read1 $R1 --read2 $R2 --path1 $D1 --path2 $D2 --threads 10 \
+--ref $REF --workdir $CWD --fastqc $FASTQCMOD --pigz $PIGZMOD \
+--samtools $SAMTOOLSMOD --runLen $runLen --perform $PERFORM \
 
 
 # Prepare reads for mapping
