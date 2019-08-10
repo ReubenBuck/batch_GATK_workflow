@@ -162,9 +162,9 @@ lociLen=$(ls ${REF%/*}/target_loci | wc -l)
 LOCI=$(echo $(ls ${REF%/*}/target_loci) |  sed 's/ /,/g')
 
 sbatch \
---mem=10g --time=2-00:00 --nodes=1 --ntasks=2 --array 1-$lociLen\
+--mem=10g --time=2-00:00 --nodes=1 --ntasks=2 --array=1-$lociLen \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
---mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/realigner_target_creator-${SM}-%j.out \
-/home/buckleyrm/scripts/batch_GATK_workflow/tasks/realigner_target_creator.sh --sample $SM \
+--mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/indel_realigner-${SM}-${TASKS}-%A-%a.out \
+/home/buckleyrm/scripts/batch_GATK_workflow/tasks/indel_realigner.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM --loci $LOCI \
 

@@ -41,7 +41,7 @@ fi
 echo -e "$(date)\nRealigning indels on ${TARGET%\.intervals} for sample $SM\n" &>> $CWD/$SM/log/$SM.run.log
 
 
-java -Djava.io.tmpdir=$FQDIR/$SM/tmp -jar $GATK \
+java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
 -T IndelRealigner \
 -R $REF \
 -I $CWD/$SM/bam/$SM.markdup.bam \
