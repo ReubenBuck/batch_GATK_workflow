@@ -133,4 +133,38 @@ sbatch \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/mark_duplicates.sh --sample $SM \
 --workdir $CWD --picard $PICARD --java $JAVAMOD --perform $PERFORM \
 
+# index.sh
+sbatch \
+--mem=10g --time=2-00:00 --nodes=1 --ntasks=10 \
+--job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
+--mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/index-${SM}-%j.out \
+/home/buckleyrm/scripts/batch_GATK_workflow/tasks/index.sh --sample $SM \
+--workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads 10 \
+
+# unmapped_reads.sh
+sbatch \
+--mem=10g --time=2-00:00 --nodes=1 --ntasks=10 \
+--job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
+--mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/unmapped_reads-${SM}-%j.out \
+/home/buckleyrm/scripts/batch_GATK_workflow/tasks/unmapped_reads.sh --sample $SM \
+--workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads 10 \
+
+# realigner_target_creator 
+sbatch \
+--mem=10g --time=2-00:00 --nodes=1 --ntasks=10 \
+--job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
+--mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/realigner_target_creator-${SM}-%j.out \
+/home/buckleyrm/scripts/batch_GATK_workflow/tasks/realigner_target_creator.sh --sample $SM \
+--workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM --threads 10 \
+
+# indel realignment 
+lociLen=$(ls ${REF%/*}/target_loci | wc -l)
+LOCI=$(echo $(ls ${REF%/*}/target_loci) |  sed 's/ /,/g')
+
+sbatch \
+--mem=10g --time=2-00:00 --nodes=1 --ntasks=2 --array 1-$lociLen\
+--job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
+--mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/realigner_target_creator-${SM}-%j.out \
+/home/buckleyrm/scripts/batch_GATK_workflow/tasks/realigner_target_creator.sh --sample $SM \
+--workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM --loci $LOCI \
 
