@@ -134,17 +134,18 @@ sbatch \
 --workdir $CWD --picard $PICARD --java $JAVAMOD --perform $PERFORM \
 
 # index.sh
-sbatch \
+IDXJOB=$(sbatch \
 --mem=10g --time=2-00:00 --nodes=1 --ntasks=10 \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/index-${SM}-%j.out \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/index.sh --sample $SM \
---workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads 10 \
+--workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads 10 | cut -f 4 -d ' ')
+
 
 # unmapped_reads.sh
 sbatch \
 --mem=10g --time=2-00:00 --nodes=1 --ntasks=10 \
---job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
+--job-name=$SM_unmapped --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d afterok:$IDXJOB \
 --mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/unmapped_reads-${SM}-%j.out \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/unmapped_reads.sh --sample $SM \
 --workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads 10 \
@@ -161,10 +162,75 @@ sbatch \
 lociLen=$(ls ${REF%/*}/target_loci | wc -l)
 LOCI=$(echo $(ls ${REF%/*}/target_loci) |  sed 's/ /,/g')
 
-sbatch \
+# needs a job id for cat_sort_index_bams.sh
+CATBAMID=$(sbatch \
 --mem=10g --time=2-00:00 --nodes=1 --ntasks=2 --array=1-$lociLen \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/indel_realigner-${SM}-${TASKS}-%A-%a.out \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/indel_realigner.sh --sample $SM \
---workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM --loci $LOCI \
+--workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM --loci $LOCI | cut -f 4 -d ' ')
+
+# cat_sort_index.sh
+# this is the end bam for non recalibration
+# we may not need this at all
+# or maybe we can use it later
+
+
+
+if [[ BQSR = true ]]; then
+# first_pass_bqsr.s
+BQSRID=$(sbatch \
+--mem=10g --time=2-00:00 --nodes=1 --ntasks=10 \
+--job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
+--mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/first_pass_bqsr-${SM}-%j.out \
+/home/buckleyrm/scripts/batch_GATK_workflow/tasks/first_pass_bqsr.sh --sample $SM \
+--workdir $CWD --gatk $GATK --java $JAVAMOD --recal $RECAL --ref $REF \
+--perform $PERFORM --threads 10 | cut -f 4 -d ' ')
+
+# print_reads.sh
+# needs a job id for cat_sort_index_bams.sh
+CATBAMID=$(sbatch \
+--mem=10g --time=2-00:00 --nodes=1 --ntasks=2 --array=1-$lociLen \
+--job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
+--mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/indel_realigner-${SM}-${TASKS}-%A-%a.out \
+/home/buckleyrm/scripts/batch_GATK_workflow/tasks/indel_realigner.sh --sample $SM \
+--workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM --loci $LOCI | cut -f 4 -d ' ')
+
+
+# second_pass_bqsr.sh
+sbatch \
+--mem=10g --time=2-00:00 --nodes=1 --ntasks=10 \
+--job-name=$SM_recal_plots --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d afterok:$BQSRID \
+--mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/second_pass_bqsr-${SM}-%j.out \
+/home/buckleyrm/scripts/batch_GATK_workflow/tasks/first_pass_bqsr.sh --sample $SM \
+--workdir $CWD --gatk $GATK --java $JAVAMOD --recal $RECAL --ref $REF \
+--perform $PERFORM --threads 10 \
+fi
+
+# cat_sort_index.sh
+# this can run parallele to haplotype caller
+# needs to take two alternative jobIDs, no we can just overwrite the variable if bqsr is true
+# push the output to final destination
+# then get an md5sum
+sbatch \
+--mem=10g --time=2-00:00 --nodes=1 --ntasks=10 \
+--job-name=$SM_cat_bams --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d afterok:$CATBAMID \
+--mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/cat_sort_index_bams-${SM}-%j.out \
+/home/buckleyrm/scripts/batch_GATK_workflow/tasks/cat_sort_index_bams.sh --sample $SM \
+--ref $REF --workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads 10 \
+
+
+
+# next is haplotype caller
+
+
+
+
+# combine gvcfs and send to final place
+
+
+
+# move logs and metrics to final place
+
+
 
