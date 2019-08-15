@@ -13,10 +13,13 @@ shift; JAVAMOD=$1
 shift; REF=$1
 ;;
 --recal )
-shift; RECAL=1
+shift; RECAL=$1
 ;;
 --perform )
 shift; PERFORM=$1
+;;
+--threads )
+shift; THREADS=$1
 ;;
 --workdir )
 shift; CWD=$1
@@ -39,7 +42,7 @@ eval ls $CWD/$SM/bam/$SM.{$(echo $LOCI)}.realign.bam > $CWD/$SM/tmp/$SM.bams.lis
 
 
 java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
-	-nct 20 \
+	-nct $THREADS \
 	-T BaseRecalibrator \
 	-R $REF \
 	-I $CWD/$SM/tmp/$SM.bams.list \
@@ -47,7 +50,7 @@ java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
 	-o $CWD/$SM/metrics/$SM.recal_data.table \
 	--log_to_file $CWD/$SM/log/$SM.bqsr_first.log
 
-if [[ -s $CWD/$SM/bam/$SM.realign.sort.bam.bai ]]; then
+if [[ -s $CWD/$SM/metrics/$SM.recal_data.table ]]; then
     echo -e "$(date)\nFirst pass BQSR for $SM is complete\n" &>> $CWD/$SM/log/$SM.run.log
 else
     echo -e "$(date)\nFirst pass BQSR table for $SM is not found or is empty, exiting\n" &>> $CWD/$SM/log/$SM.run.log

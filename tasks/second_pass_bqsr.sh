@@ -13,7 +13,7 @@ shift; JAVAMOD=$1
 shift; REF=$1
 ;;
 --recal )
-shift; RECAL=1
+shift; RECAL=$1
 ;;
 --perform )
 shift; PERFORM=$1
@@ -43,7 +43,7 @@ java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
 -BQSR $CWD/$SM/metrics/$SM.recal_data.table \
 --log_to_file $CWD/$SM/log/$SM.bqsr_second.log
 
-if [[ -s $CWD/$SM/bam/$SM.realign.sort.bam.bai ]]; then
+if [[ -s $CWD/$SM/metrics/$SM.post_recal_data.table ]]; then
     echo -e "$(date)\nSecond pass BQSR for $SM is complete\n" &>> $CWD/$SM/log/$SM.run.log
 else
     echo -e "$(date)\nSecond pass BQSR table for $SM is not found or is empty, exiting\n" &>> $CWD/$SM/log/$SM.run.log
@@ -51,19 +51,19 @@ else
 fi
 
 
-# this may not work! It might require R to work
-echo -e "$(date)\nAnalyze covariates for sample $SM\n" &>> $CWD/$SM/log/$SM.run.log
-
-java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
--T AnalyzeCovariates \ 
--R $REF \  
--before $CWD/$SM/metrics/$SM.recal_data.table \
--after $CWD/$SM/metrics/$SM.post_recal_data.table \
--plots $CWD/$SM/metrics/$SM.recalibration_plots.pdf
-
-if [[ -s $CWD/$SM/metrics/$SM.recalibration_plots.pdf ]]; then
-    echo -e "$(date)\nCovariate analysis for $SM is complete\n" &>> $CWD/$SM/log/$SM.run.log
-else
-    echo -e "$(date)\nCovariate analysis for $SM is not found or is empty, exiting\n" &>> $CWD/$SM/log/$SM.run.log
-    scancel -n $SM
-fi
+## this may not work! It might require R to work
+#echo -e "$(date)\nAnalyze covariates for sample $SM\n" &>> $CWD/$SM/log/$SM.run.log
+#
+#java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
+#-T AnalyzeCovariates \
+#-R $REF \
+#-before $CWD/$SM/metrics/$SM.recal_data.table \
+#-after $CWD/$SM/metrics/$SM.post_recal_data.table \
+#-plots $CWD/$SM/metrics/$SM.recalibration_plots.pdf
+#
+#if [[ -s $CWD/$SM/metrics/$SM.recalibration_plots.pdf ]]; then
+#    echo -e "$(date)\nCovariate analysis for $SM is complete\n" &>> $CWD/$SM/log/$SM.run.log
+#else
+#    echo -e "$(date)\nCovariate analysis for $SM is not found or is empty, exiting\n" &>> $CWD/$SM/log/$SM.run.log
+#    scancel -n $SM
+#fi

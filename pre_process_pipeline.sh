@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # set defults for unused options
 BQSR=false
 PERFORM=false
@@ -35,10 +34,10 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
     runLen=$(expr $(wc -l $CONFIG | cut -d" " -f1) - 1)
     ;;
   -r | --recal )
-	shift; BQSR=true
+	BQSR=true
 	;;
   -P | --perform )
-	shift; PERFORM=true
+	PERFORM=true
 	;;
   -a | --account )
 	shift; ACCOUNT=$1
@@ -70,6 +69,9 @@ shift; FASTQCMOD=$1
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
+
+echo $BQSR
+echo $PERFORM
 
 # in performance mode we use the entire node for each task
 if [[ $PERFORM = true ]]; then
@@ -141,11 +143,12 @@ IDXJOB=$(sbatch \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/index.sh --sample $SM \
 --workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads 10 | cut -f 4 -d ' ')
 
+echo $IDXJOB
 
 # unmapped_reads.sh
 sbatch \
 --mem=10g --time=2-00:00 --nodes=1 --ntasks=10 \
---job-name=$SM_unmapped --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d afterok:$IDXJOB \
+--job-name=${SM}-unmapped --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d afterok:$IDXJOB \
 --mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/unmapped_reads-${SM}-%j.out \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/unmapped_reads.sh --sample $SM \
 --workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads 10 \
@@ -170,42 +173,47 @@ CATBAMID=$(sbatch \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/indel_realigner.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM --loci $LOCI | cut -f 4 -d ' ')
 
-# cat_sort_index.sh
-# this is the end bam for non recalibration
-# we may not need this at all
-# or maybe we can use it later
+#cat_sort_index.sh
+#this is the end bam for non recalibration
+#we may not need this at all
+#or maybe we can use it later
 
 
 
-if [[ BQSR = true ]]; then
-# first_pass_bqsr.s
+if [[ $BQSR = true ]]; then
+#first_pass_bqsr.s
 BQSRID=$(sbatch \
---mem=10g --time=2-00:00 --nodes=1 --ntasks=10 \
+--mem=50g --time=2-00:00 --nodes=1 --ntasks=10 \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/first_pass_bqsr-${SM}-%j.out \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/first_pass_bqsr.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --recal $RECAL --ref $REF \
 --perform $PERFORM --threads 10 | cut -f 4 -d ' ')
 
+echo $BQSRID
+
 # print_reads.sh
 # needs a job id for cat_sort_index_bams.sh
 CATBAMID=$(sbatch \
 --mem=10g --time=2-00:00 --nodes=1 --ntasks=2 --array=1-$lociLen \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
---mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/indel_realigner-${SM}-${TASKS}-%A-%a.out \
-/home/buckleyrm/scripts/batch_GATK_workflow/tasks/indel_realigner.sh --sample $SM \
+--mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/print_reads-${SM}-${TASKS}-%A-%a.out \
+/home/buckleyrm/scripts/batch_GATK_workflow/tasks/print_reads.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM --loci $LOCI | cut -f 4 -d ' ')
 
 
 # second_pass_bqsr.sh
 sbatch \
---mem=10g --time=2-00:00 --nodes=1 --ntasks=10 \
---job-name=$SM_recal_plots --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d afterok:$BQSRID \
+--mem=10g --time=2-00:00 --nodes=1 --ntasks=10 -d afterok:$BQSRID \
+--job-name=${SM}-recal-plots --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
 --mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/second_pass_bqsr-${SM}-%j.out \
-/home/buckleyrm/scripts/batch_GATK_workflow/tasks/first_pass_bqsr.sh --sample $SM \
+/home/buckleyrm/scripts/batch_GATK_workflow/tasks/second_pass_bqsr.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --recal $RECAL --ref $REF \
---perform $PERFORM --threads 10 \
+--perform $PERFORM --threads 10 
+
 fi
+
+echo $CATBAMID
 
 # cat_sort_index.sh
 # this can run parallele to haplotype caller
@@ -214,7 +222,7 @@ fi
 # then get an md5sum
 sbatch \
 --mem=10g --time=2-00:00 --nodes=1 --ntasks=10 \
---job-name=$SM_cat_bams --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d afterok:$CATBAMID \
+--job-name=${SM}-cat-bams --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d afterok:$CATBAMID \
 --mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/cat_sort_index_bams-${SM}-%j.out \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/cat_sort_index_bams.sh --sample $SM \
 --ref $REF --workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads 10 \
@@ -231,6 +239,4 @@ sbatch \
 
 
 # move logs and metrics to final place
-
-
 

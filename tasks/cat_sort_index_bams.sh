@@ -1,6 +1,3 @@
-# this script needs rewording for the end
-
-
 #!/bin/bash
 while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
 --sample )
