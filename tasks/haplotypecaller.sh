@@ -16,8 +16,11 @@ shift; JAVAMOD=$1
 --ref )
 shift; REF=$1
 ;;
---recal )
-shift; RECAL=1
+--bqsr )
+shift; BQSR=$1
+;;
+--threads )
+shift; THREADS=$1
 ;;
 --perform )
 shift; PERFORM=$1
@@ -34,9 +37,9 @@ TASK=${SLURM_ARRAY_TASK_ID}
 TARGET=${LOCIarr[$TASK]}
 
 # take two different inputs
-if [[ BQSR = true ]]; then
+if [[ $BQSR = true ]]; then
 	inStatus=recal
-elif [[ BQSR = false ]]; then
+elif [[ $BQSR = false ]]; then
 	inStatus=realign
 fi
 
@@ -49,10 +52,11 @@ echo -e "$(date)\nHaplotypecaller for sample $SM ${TARGET%\.intervals} \n" &>> $
 
 
 java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
--nct 25 \
+-nct $THREADS \
 -ERC GVCF \
 -T HaplotypeCaller \
 -R $REF \
+-L ${REF%/*}/target_loci/$TARGET \
 -I $CWD/$SM/bam/$SM.${TARGET%\.intervals}.$inStatus.bam \
 -o $CWD/$SM/gvcf/$SM.${TARGET%\.intervals}.g.vcf.gz
 

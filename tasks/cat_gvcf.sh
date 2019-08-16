@@ -45,12 +45,13 @@ if [[ $PERFORM = true ]]; then
     vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_cat_gvcf_$SM.txt &
 fi
 
+echo -e "$(date)\nBegin cat GVCF for $SM" &>> $CWD/$SM/log/$SM.run.log
 
-VAR=$(eval echo -e "I=$CWD/$SM/gvcf/$SM.{$(echo $LOCI)}.g.vcf")
+VAR=$(eval echo -e "I=$CWD/$SM/gvcf/$SM.{$(echo $LOCI)}.g.vcf.gz" | sed "s/.intervals//g")
 
 java -jar $PICARD SortVcf $VAR O=$CWD/$SM/gvcf/$SM.g.vcf.gz
 
-if [[ -s $GVCF/$SM.g.vcf.gz ]]; then
+if [[ -s $CWD/$SM/gvcf/$SM.g.vcf.gz ]]; then
     echo -e "$(date)\ncat GVCF for $SM is complete\n" &>> $CWD/$SM/log/$SM.run.log
 else
     echo -e "$(date)\ncat GVCF for $SM is not found or is empty, exiting\n" &>> $CWD/$SM/log/$SM.run.log

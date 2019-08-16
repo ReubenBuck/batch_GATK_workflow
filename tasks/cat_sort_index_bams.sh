@@ -27,9 +27,9 @@ if [[ "$1" == '--' ]]; then shift; fi
 module load $SAMTOOLSMOD
 
 
-if [[ BQSR = true ]]; then
+if [[ $BQSR = true ]]; then
     inStatus=recal
-elif [[ BQSR = false ]]; then
+elif [[ $BQSR = false ]]; then
     inStatus=realign
 fi
 

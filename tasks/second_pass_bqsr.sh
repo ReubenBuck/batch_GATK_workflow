@@ -12,6 +12,9 @@ shift; JAVAMOD=$1
 --ref )
 shift; REF=$1
 ;;
+--threads )
+shift; THREADS=$1
+;;
 --recal )
 shift; RECAL=$1
 ;;
@@ -34,14 +37,13 @@ fi
 echo -e "$(date)\nSecond pass BQSR for sample $SM\n" &>> $CWD/$SM/log/$SM.run.log
 
 java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
--nct 20 \
+-nct $THREADS \
 -T BaseRecalibrator \
 -R $REF \
 -I $CWD/$SM/tmp/$SM.bams.list \
 -knownSites $RECAL \
 -o $CWD/$SM/metrics/$SM.post_recal_data.table \
--BQSR $CWD/$SM/metrics/$SM.recal_data.table \
---log_to_file $CWD/$SM/log/$SM.bqsr_second.log
+-BQSR $CWD/$SM/metrics/$SM.recal_data.table
 
 if [[ -s $CWD/$SM/metrics/$SM.post_recal_data.table ]]; then
     echo -e "$(date)\nSecond pass BQSR for $SM is complete\n" &>> $CWD/$SM/log/$SM.run.log
