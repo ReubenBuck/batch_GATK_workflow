@@ -40,6 +40,13 @@ elif [[ BQSR = false ]]; then
 	inStatus=realign
 fi
 
+if [[ $PERFORM = true ]]; then
+    echo -e "$(date) haplotypecaller.sh is running on $(hostname)" &>>  $CWD/$SM/metrics/perform_haplotypecaller_$SM_${TARGET%\.intervals}.txt
+    vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_haplotypecaller_$SM_${TARGET%\.intervals}.txt &
+fi
+
+echo -e "$(date)\nHaplotypecaller for sample $SM ${TARGET%\.intervals} \n" &>> $CWD/$SM/log/$SM.run.log
+
 
 java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
 -nct 25 \
@@ -49,4 +56,9 @@ java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
 -I $CWD/$SM/bam/$SM.${TARGET%\.intervals}.$inStatus.bam \
 -o $CWD/$SM/gvcf/$SM.${TARGET%\.intervals}.g.vcf.gz
 
-
+if [[ -s $CWD/$SM/gvcf/$SM.${TARGET%\.intervals}.g.vcf.gz ]]; then
+    echo -e "$(date)\nGenotyping for $SM ${TARGET%\.intervals} is complete\n" &>> $CWD/$SM/log/$SM.run.log
+else
+    echo -e "$(date)\nGenotyping for $SM ${TARGET%\.intervals} is not found or is empty, exiting\n" &>> $CWD/$SM/log/$SM.run.log
+    scancel -n $SM
+fi

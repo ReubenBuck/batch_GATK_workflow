@@ -69,10 +69,6 @@ shift; FASTQCMOD=$1
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
-
-echo $BQSR
-echo $PERFORM
-
 # in performance mode we use the entire node for each task
 if [[ $PERFORM = true ]]; then
 	EXCLUSIVE="--exclusive"
@@ -225,18 +221,38 @@ sbatch \
 --job-name=${SM}-cat-bams --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d afterok:$CATBAMID \
 --mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/cat_sort_index_bams-${SM}-%j.out \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/cat_sort_index_bams.sh --sample $SM \
---ref $REF --workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads 10 \
+--ref $REF --workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads 10 --bqsr BQSR \
 
 
+# haplotype caller
+sbatch \
+--mem=10g --time=2-00:00 --nodes=1 --ntasks=10 -d singleton --array 1-$lociLen \
+--job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
+--mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/haplotypecaller-${SM}-%A-%a.out \
+/home/buckleyrm/scripts/batch_GATK_workflow/tasks/haplotypecaller.sh --sample $SM \
+--workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --loci $LOCI \
+--perform $PERFORM --threads 10 
 
-# next is haplotype caller
+# cat gvcfs
+sbatch \
+--mem=10g --time=2-00:00 --nodes=1 --ntasks=10 -d singleton \
+--job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
+--mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/cat_gvcf-${SM}-%j.out \
+/home/buckleyrm/scripts/batch_GATK_workflow/tasks/cat_gvcf.sh --sample $SM \
+--workdir $CWD --picard $PICARD --java $JAVAMOD --ref $REF --loci $LOCI \
+--perform $PERFORM --threads 10
 
+# move everything to final place
+sbatch \
+--mem=10g --time=2-00:00 --nodes=1 --ntasks=10 -d singleton \
+--job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
+--mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/cp_files-${SM}-%j.out \
+/home/buckleyrm/scripts/batch_GATK_workflow/tasks/cp_files.sh --sample $SM \
+--workdir $CWD --bam $BAM --metrics $METRICS --log $LOG  --gvcf $GVCF --bqsr $BQSR
 
-
-
-# combine gvcfs and send to final place
-
-
-
-# move logs and metrics to final place
-
+batch \
+--mem=10g --time=2-00:00 --nodes=1 --ntasks=1 -d singleton \
+--job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
+--mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=clean_wd-${SM}-%j.out \
+/home/buckleyrm/scripts/batch_GATK_workflow/tasks/clean_wd.sh --sample $SM \
+--workdir $CWD
