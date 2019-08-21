@@ -10,62 +10,66 @@ JAVAMOD=java/openjdk/java-1.8.0-openjdk
 PIGZMOD=pigz/pigz-2.4
 FASTQCMOD=fastqc/fastqc-0.11.7
 BWAMOD=bwa/bwa-0.7.17
+RMOD=R/R-3.3.3
 
 # need to read in the config file! 
 while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
-  -c | --config )
-    shift; CONFIG=$1
-    SM=$(cat $CONFIG | sed '2q;d' | awk {'print $1'}) # pulls out first row of config col 1
-    LB=$(echo $(cat $CONFIG | cut -f2) | sed 's/ /,/g') # pulls out entire col 2 and converts to comma sep values
-    PL=$(echo $(cat $CONFIG | cut -f3) | sed 's/ /,/g')
-    FC=$(echo $(cat $CONFIG | cut -f4) | sed 's/ /,/g')
-    LN=$(echo $(cat $CONFIG | cut -f5) | sed 's/ /,/g')
-    R1=$(echo $(cat $CONFIG | cut -f6) | sed 's/ /,/g')
-    R2=$(echo $(cat $CONFIG | cut -f7) | sed 's/ /,/g')
-    D1=$(echo $(cat $CONFIG | cut -f8) | sed 's/ /,/g')
-    D2=$(echo $(cat $CONFIG | cut -f9) | sed 's/ /,/g')
-    REF=$(cat $CONFIG | sed '2q;d' | awk {'print $10'})
-    RECAL=$(cat $CONFIG | sed '2q;d' | awk {'print $11'})
-    CWD=$(cat $CONFIG | sed '2q;d' | awk {'print $12'}) # root HPC dir for processing
-    BAM=$(cat $CONFIG | sed '2q;d' | awk {'print $13'}) # final destination for files
-    GVCF=$(cat $CONFIG | sed '2q;d' | awk {'print $14'})
-    METRICS=$(cat $CONFIG | sed '2q;d' | awk {'print $15'})
-    LOG=$(cat $CONFIG | sed '2q;d' | awk {'print $16'})
-    runLen=$(expr $(wc -l $CONFIG | cut -d" " -f1) - 1)
-    ;;
-  -r | --recal )
-	BQSR=true
-	;;
-  -P | --perform )
-	PERFORM=true
-	;;
-  -a | --account )
-	shift; ACCOUNT=$1
-	;;
-  -p | --partition )
-	shift; PARTITION=$1
-	;;
-  -e | --email )
-	shift; EMAIL=$1
-	;;
-  -s | --samtools )
-	shift; SAMTOOLSMOD=$1
-	;;
-  -g | --gatk )
-	shift; GATK=$1
-	;;
-  -t | --picard )
-	shift; PICARD=$1
-	;;
-  -c | --pigz )
-	shift; JAVAMOD=$1
-	;;
-  -f | --fastqc )
+-c | --config )
+shift; CONFIG=$1
+SM=$(cat $CONFIG | sed '2q;d' | awk {'print $1'}) # pulls out first row of config col 1
+LB=$(echo $(cat $CONFIG | cut -f2) | sed 's/ /,/g') # pulls out entire col 2 and converts to comma sep values
+PL=$(echo $(cat $CONFIG | cut -f3) | sed 's/ /,/g')
+FC=$(echo $(cat $CONFIG | cut -f4) | sed 's/ /,/g')
+LN=$(echo $(cat $CONFIG | cut -f5) | sed 's/ /,/g')
+R1=$(echo $(cat $CONFIG | cut -f6) | sed 's/ /,/g')
+R2=$(echo $(cat $CONFIG | cut -f7) | sed 's/ /,/g')
+D1=$(echo $(cat $CONFIG | cut -f8) | sed 's/ /,/g')
+D2=$(echo $(cat $CONFIG | cut -f9) | sed 's/ /,/g')
+REF=$(cat $CONFIG | sed '2q;d' | awk {'print $10'})
+RECAL=$(cat $CONFIG | sed '2q;d' | awk {'print $11'})
+CWD=$(cat $CONFIG | sed '2q;d' | awk {'print $12'}) # root HPC dir for processing
+BAM=$(cat $CONFIG | sed '2q;d' | awk {'print $13'}) # final destination for files
+GVCF=$(cat $CONFIG | sed '2q;d' | awk {'print $14'})
+METRICS=$(cat $CONFIG | sed '2q;d' | awk {'print $15'})
+LOG=$(cat $CONFIG | sed '2q;d' | awk {'print $16'})
+runLen=$(expr $(wc -l $CONFIG | cut -d" " -f1) - 1)
+;;
+-r | --recal )
+BQSR=true
+;;
+-P | --perform )
+PERFORM=true
+;;
+-a | --account )
+shift; ACCOUNT=$1
+;;
+-p | --partition )
+shift; PARTITION=$1
+;;
+-e | --email )
+shift; EMAIL=$1
+;;
+-s | --samtools )
+shift; SAMTOOLSMOD=$1
+;;
+-g | --gatk )
+shift; GATK=$1
+;;
+-t | --picard )
+shift; PICARD=$1
+;;
+-c | --pigz )
+shift; JAVAMOD=$1
+;;
+-f | --fastqc )
 shift; FASTQCMOD=$1
-	;;
-  -b | --bwa )
-  shift; BWAMOD=$1
-  ;;
+;;
+-b | --bwa )
+shift; BWAMOD=$1
+;;
+-r | --rversion )
+shift; RMOD=$1
+;;
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 

@@ -48,12 +48,12 @@ R2=${R2arr[$TASK]}
 D1=${D1arr[$TASK]}
 D2=${D2arr[$TASK]}
 
-echo $CWD
+sleep $((RANDOM % 10))
 
-echo -e "$(date)\nVariables in prepare_reads.sh task $TASK have been assigned as,\nR1 is ${R1}\nR2 is ${R2}\nD1 is ${D1}\nD2 is ${D2}\n" > $CWD/$SM/log/$SM.prepare_reads.$TASK.log
+echo -e "$(date)\nVariables in prepare_reads.sh task $TASK have been assigned as,\nR1 is ${R1}\nR2 is ${R2}\nD1 is ${D1}\nD2 is ${D2}\n"
 
 
-echo -e "$(date)\nprepare_reads.$TASK.sh is running on $(hostname)\n" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\tbegin\tprepare_reads.sh\t$TASK" &>> $CWD/$SM/log/$SM.run.log
 
 # here we can start measuring performance stats
 if [[ $PERFORM = true ]]; then
@@ -68,14 +68,14 @@ module load $PIGZMOD
 
 
 if [[ $D2 = *".bam" ]]; then
-	echo -e "$(date)\nData is storred in unaligned bam format, converting to fastq\n" &>> $CWD/$SM/log/$SM.run.log
-	samtools fastq --threads $THREADS -1 $FQDIR/$SM/$R1 -2 $FQDIR/$SM/$R2 $D1/$D2 &>> $CWD/$SM/log/$SM.prepare_reads.$TASK.log
+	echo -e "$(date)\nData is storred in unaligned bam format, converting to fastq\n"
+	samtools fastq --threads $THREADS -1 $FQDIR/$SM/$R1 -2 $FQDIR/$SM/$R2 $D1/$D2
 elif [[ $D2 = *".cram" ]]; then
-	echo -e "$(date)\nData is storred in cram format, converting to fastq\n" &>> $CWD/$SM/log/$SM.run.log
-	samtools view -@ $THREADS -b -o $CWD/$SM/tmp/${D1/cram/bam} $D1/$D2 &>> $CWD/$SM/log/$SM.prepare_reads.$TASK.log
-	samtools fastq --threads $THREADS -1 $CWD/$SM/fastq/$R1 -2 $FQDIR/$SM/fastq/$R2 $CWD/$SM/tmp/${D1/cram/bam} &>> $CWD/$SM/log/$SM.prepare_reads.$TASK.log
+	echo -e "$(date)\nData is storred in cram format, converting to fastq\n"
+	samtools view -@ $THREADS -b -o $CWD/$SM/tmp/${D1/cram/bam} $D1/$D2 
+	samtools fastq --threads $THREADS -1 $CWD/$SM/fastq/$R1 -2 $FQDIR/$SM/fastq/$R2 $CWD/$SM/tmp/${D1/cram/bam}
 else
-	echo -e "$(date)\nData is likely storred as compressed fastq, uncompressing\n" &>> $CWD/$SM/log/$SM.run.log
+	echo -e "$(date)\nData is likely storred as compressed fastq, uncompressing\n"
 	pigz -cd -p $THREADS $D1/$R1.gz > $CWD/$SM/fastq/$R1
 	pigz -cd -p $THREADS $D2/$R2.gz > $CWD/$SM/fastq/$R2
 fi
@@ -83,15 +83,16 @@ fi
 
 # check if file succesfully uncompressed
 if [[ -s $CWD/$SM/fastq/$R1 && -s $CWD/$SM/fastq/$R2 ]]; then
-	echo -e "$(date)\nUncompressed read pair files found for task no. $TASK, continuing\n" &>> $CWD/$SM/log/$SM.run.log
+	echo -e "$(date)\nUncompressed read pair files found for task no. $TASK, continuing\n"
 else
-	echo -e "$(date)\nUncompressed read pair files not found for task no. $TASK, exiting\n" &>> $CWD/$SM/log/$SM.run.log
+	echo -e "$(date)\nUncompressed read pair files not found for task no. $TASK, exiting\n"
 	scancel -n $SM
 fi
 
 	# check quality with fastqc
-echo -e "$(date)\nFastqc quality checks for task no. $TASK ...\n" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\nFastqc quality checks for task no. $TASK ...\n"
 fastqc -o $CWD/$SM/metrics -d $CWD/$SM/tmp -t $THREADS $CWD/$SM/fastq/$R1 $CWD/$SM/fastq/$R2
 
-echo -e "$(date)\nReads are prepared for mapping for task no. $TASK \n" &>> $CWD/$SM/log/$SM.run.log
-echo -e "$(date)\nReads are prepared for mapping for task no. $TASK \n" &>> $CWD/$SM/log/$SM.prepare_reads.$TASK.log
+echo -e "$(date)\nReads are prepared for mapping for task no. $TASK \n"
+
+echo -e "$(date)\tend\tprepare_reads.sh\t$TASK" &>> $CWD/$SM/log/$SM.run.log
