@@ -61,6 +61,8 @@ LN=${LNarr[$TASK]}
 LB=${LBarr[$TASK]}
 PL=${PLarr[$TASK]}
 
+sleep $((RANDOM % 10))
+
 # here we can start measuring performance stats
 if [[ $PERFORM = true ]]; then
     echo -e "$(date): map_reads.sh task $TASK is running on $(hostname)" &>>  $CWD/$SM/metrics/perform_map_reads_$SM.$TASK.txt
@@ -71,15 +73,17 @@ fi
 #set up read groups
 RG="@RG\tID:${LB}.${FC}.${LN}\tPU:${LB}.${FC}.${LN}\tSM:${SM}\tPL:${PL}\tLB:${LB}"
 
-echo -e "$(date)\nBegin mapping for $SM task $TASK with read group:\n$RG\n" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\tbegin\tmap_reads.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
+
+echo $RG
 	
-(bwa mem -M -R $RG -t $THREADS $REF $CWD/$SM/fastq/$R1 $CWD/$SM/fastq/$R2 | samtools view -Sb - > $CWD/$SM/bam/$SM.$TASK.bam) 2> $CWD/$SM/log/$SM.bwa.$TASK.log
+(bwa mem -M -R $RG -t $THREADS $REF $CWD/$SM/fastq/$R1 $CWD/$SM/fastq/$R2 | samtools view -Sb - > $CWD/$SM/bam/$SM.$TASK.bam) 
 
 if [[ $(wc -c <$CWD/$SM/bam/$SM.$TASK.bam) -ge 1000 ]]; then
 	samtools flagstat -@ $THREADS $CWD/$SM/bam/$SM.$TASK.bam &>> $CWD/$SM/metrics/$SM.$TASK.flagstat.txt
-	echo -e "$(date)\nMapping for $SM task $TASK with read group:\n$RG\nis complete\n" &>> $CWD/$SM/log/$SM.run.log
+	echo -e "$(date)\tend\tmap_reads.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
 else
-	echo -e "$(date)\nBam file not found or too small for $SM task $TASK, exiting\n" &>> $CWD/$SM/log/$SM.run.log
+	echo -e "$(date)\tfail\tmap_reads.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
 	scancel -n $SM
 fi
 

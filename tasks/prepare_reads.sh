@@ -53,7 +53,7 @@ sleep $((RANDOM % 10))
 echo -e "$(date)\nVariables in prepare_reads.sh task $TASK have been assigned as,\nR1 is ${R1}\nR2 is ${R2}\nD1 is ${D1}\nD2 is ${D2}\n"
 
 
-echo -e "$(date)\tbegin\tprepare_reads.sh\t$TASK" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\tbegin\tprepare_reads.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
 
 # here we can start measuring performance stats
 if [[ $PERFORM = true ]]; then
@@ -95,4 +95,4 @@ fastqc -o $CWD/$SM/metrics -d $CWD/$SM/tmp -t $THREADS $CWD/$SM/fastq/$R1 $CWD/$
 
 echo -e "$(date)\nReads are prepared for mapping for task no. $TASK \n"
 
-echo -e "$(date)\tend\tprepare_reads.sh\t$TASK" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\tend\tprepare_reads.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log

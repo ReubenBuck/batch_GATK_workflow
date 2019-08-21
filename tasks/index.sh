@@ -27,13 +27,13 @@ if [[ $PERFORM = true ]]; then
 fi
 
 
-echo -e "$(date)\nIndexing bam for sample $SM\n" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\tbegin\tindex.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
 samtools index -@ $THREADS $CWD/$SM/bam/$SM.markdup.bam
 
 if [[ -s $CWD/$SM/bam/$SM.markdup.bam.bai ]]; then
-    echo -e "$(date)\nIndexing for $SM is complete\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\tend\tindex.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\n$SM bai file not found or empty, exiting\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\tfail\tindex.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi

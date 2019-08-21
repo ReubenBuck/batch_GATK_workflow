@@ -30,7 +30,7 @@ if [[ $PERFORM = true ]]; then
     vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_indel_target_creator_$SM.txt &
 fi
 
-echo -e "$(date)\nCreate indel relaignment targets for sample $SM\n" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\tbegin\trealigner_target_creator.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
 
 java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
@@ -38,13 +38,12 @@ java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
 -T RealignerTargetCreator \
 -R $REF \
 -I $CWD/$SM/bam/$SM.markdup.bam \
--o $CWD/$SM/fastq/$SM.indelTarget.intervals \
-&>> $CWD/$SM/log/$SM.realignerTargetCreator.log
+-o $CWD/$SM/fastq/$SM.indelTarget.intervals
 
 
 if [[ $(wc -c <$CWD/$SM/fastq/$SM.indelTarget.intervals) -ge 1000 ]]; then
-    echo -e "$(date)\nIndel target creation for $SM is complete\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\tend\trealigner_target_creator.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\n$SM indel targets not found or too small, exiting\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\tfail\trealigner_target_creator.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi

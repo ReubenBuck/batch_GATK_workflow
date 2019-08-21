@@ -30,27 +30,27 @@ if [[ $PERFORM = true ]]; then
 fi
 
 # merging
-echo -e "$(date)\nMerge $runLen bams for sample $SM\n" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\tbegin\tmerge_sort_bams.sh-merge\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
-eval samtools merge -c -f --threads $THREADS $CWD/$SM/bam/$SM.bam $CWD/$SM/bam/$SM.{1..$runLen}.bam &>> $CWD/$SM/log/$SM.merge.log
+eval samtools merge -c -f --threads $THREADS $CWD/$SM/bam/$SM.bam $CWD/$SM/bam/$SM.{1..$runLen}.bam
 
 if [[ $(wc -c <$CWD/$SM/bam/$SM.bam) -ge 1000 ]]; then
-    echo -e "$(date)\nMerge for $SM is complete\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\tend\tmerge_sort_bams.sh-merge\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\n$SM bam file after merge not found or too small, exiting\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\tfail\tmerge_sort_bams.sh-merge\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi
 
 # sort
-echo -e "$(date)\nSort $SM bam\n" &>> $CWD/$SM/log/$SM.run.log
-samtools sort --threads $THREADS -o $CWD/$SM/bam/$SM.sort.bam $CWD/$SM/bam/$SM.bam &>> $CWD/$SM/log/$SM.sort.log
+echo -e "$(date)\tbegin\tmerge_sort_bams.sh-sort\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+samtools sort --threads $THREADS -o $CWD/$SM/bam/$SM.sort.bam $CWD/$SM/bam/$SM.bam
 
 
 if [[ $(wc -c <$CWD/$SM/bam/$SM.bam) -ge 1000 ]]; then
     samtools flagstat -@ $THREADS $CWD/$SM/bam/$SM.sort.bam &>> $CWD/$SM/metrics/$SM.sort.flagstat.txt
-    echo -e "$(date)\nSort for $SM is complete\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\tend\tmerge_sort_bams.sh-sort\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\n$SM bam file after sort not found or too small, exiting\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\tfail\tmerge_sort_bams.sh-sort\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi
 

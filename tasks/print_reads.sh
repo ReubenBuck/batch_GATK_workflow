@@ -28,6 +28,8 @@ shift; CWD=$1
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
+sleep $((RANDOM % 10))
+
 module load $JAVAMOD
 
 TASK=${SLURM_ARRAY_TASK_ID}
@@ -38,7 +40,7 @@ if [[ $PERFORM = true ]]; then
     vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_first_pass_bqsr_$SM.txt &
 fi
 
-echo -e "$(date)\nPrint reads for sample $SM $TARGET \n" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\tbegin\tprint_read.sh\t$SM\t${TARGET%\.intervals}" &>> $CWD/$SM/log/$SM.run.log
 
 java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
 -nct 20 \
@@ -47,14 +49,13 @@ java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
 -L ${REF%/*}/target_loci/$TARGET \
 -I $CWD/$SM/bam/$SM.${TARGET%\.intervals}.realign.bam \
 -BQSR $CWD/$SM/metrics/$SM.recal_data.table \
--o $CWD/$SM/bam/$SM.${TARGET%\.intervals}.recal.bam \
---log_to_file $CWD/$SM/log/$SM.recal.${TARGET%\.intervals}.log
+-o $CWD/$SM/bam/$SM.${TARGET%\.intervals}.recal.bam
 
 
 if [[ -s $CWD/$SM/bam/$SM.${TARGET%\.intervals}.recal.bam ]]; then
-    echo -e "$(date)\nPrint reads for $SM $TARGET is complete\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\tend\tprint_read.sh\t$SM\t${TARGET%\.intervals}" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\tPrint reads for $SM $TARGET is not found or is empty, exiting\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\tfail\tprint_read.sh\t$SM\t${TARGET%\.intervals}" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi
 

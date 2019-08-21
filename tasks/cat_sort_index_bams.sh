@@ -42,37 +42,37 @@ fi
 LOCI=$(echo $(ls ${REF%/*}/target_loci) |  sed 's/.intervals//g' | sed 's/ /,/g')
 
 
-echo -e "$(date)\nConcat realigned bams for sample $SM\n" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\tbegin\tcat_sort_index_bams.sh-concat\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
-eval samtools cat -o $CWD/$SM/bam/$SM.$inStatus.cat.bam $CWD/$SM/bam/$SM.{$(echo $LOCI)}.$inStatus.bam &>> $CWD/$SM/log/$SM.cat_sort_index_bams.log
+eval samtools cat -o $CWD/$SM/bam/$SM.$inStatus.cat.bam $CWD/$SM/bam/$SM.{$(echo $LOCI)}.$inStatus.bam
 
 if [[ -s $CWD/$SM/bam/$SM.$inStatus.cat.bam ]]; then
-    echo -e "$(date)\nConcat realigned bams for $SM is complete\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\tend\tcat_sort_index_bams.sh-concat\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\nConcat realigned bams for $SM is not found or is empty, exiting\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\tfail\tcat_sort_index_bams.sh-concat\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi
 
 
-echo -e "$(date)\nSorting realigned bam for sample $SM\n" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\tbegin\tcat_sort_index_bams.sh-sort\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
-samtools sort --threads $THREADS -o $CWD/$SM/bam/$SM.$inStatus.bam $CWD/$SM/bam/$SM.$inStatus.cat.bam &>> $CWD/$SM/log/$SM.cat_sort_index_bams.log
+samtools sort --threads $THREADS -o $CWD/$SM/bam/$SM.$inStatus.bam $CWD/$SM/bam/$SM.$inStatus.cat.bam
 
 if [[ -s $CWD/$SM/bam/$SM.$inStatus.bam ]]; then
-    echo -e "$(date)\nSorting realigned bam for $SM is complete\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\tend\tcat_sort_index_bams.sh-sort\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\nSorted realigned bam for $SM is not found or is empty, exiting\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\tfail\tcat_sort_index_bams.sh-sort\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi
 
 
-echo -e "$(date)\nIndexing bam for sample $SM\n" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\tbegin\tcat_sort_index_bams.sh-index\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
 samtools index -@ $THREADS $CWD/$SM/bam/$SM.$inStatus.bam
 
 if [[ -s $CWD/$SM/bam/$SM.$inStatus.bam.bai ]]; then
-    echo -e "$(date)\nIndexing for $SM is complete\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\tend\tcat_sort_index_bams.sh-index\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\n$SM bai file not found or empty, exiting\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\tfail\tcat_sort_index_bams.sh-index\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi

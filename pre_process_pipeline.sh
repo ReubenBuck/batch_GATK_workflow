@@ -102,7 +102,7 @@ sbatch \
 sbatch \
 --mem=10g --time=2-00:00 --nodes=1 --ntasks=10 --array=1-$runLen \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
---mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/prepare_reads-${SM}-${TASKS}-%A-%a.out \
+--mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/prepare_reads-${SM}-%A-%a.out \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/prepare_reads.sh --sample $SM \
 --read1 $R1 --read2 $R2 --path1 $D1 --path2 $D2 --threads 10 \
 --workdir $CWD --fastqc $FASTQCMOD --pigz $PIGZMOD \
@@ -211,7 +211,7 @@ sbatch \
 --mail-user=$EMAIL --mail-type=FAIL,CANCEL --output=$CWD/$SM/log/second_pass_bqsr-${SM}-%j.out \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/second_pass_bqsr.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --recal $RECAL --ref $REF \
---perform $PERFORM --threads 10 
+--perform $PERFORM --threads 10 --rversion $RMOD
 
 fi
 

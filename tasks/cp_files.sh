@@ -32,7 +32,7 @@ elif [[ $BQSR = false ]]; then
 fi
 
 
-echo -e "$(date)\t$SM moving final files and performing md5sum checks, updating permissions\n" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\tbegin\tcp_files.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
 # bams 
 echo $(md5sum $CWD/$SM/bam/$SM.$inStatus.bam | cut -f1 -d' ') $SM.bam > $BAM/$SM.bam.md5 &
@@ -74,10 +74,10 @@ wait
 
 # make sure all checks passed
 if [[ $(grep "OK" $CWD/$SM/log/$SM.final.check.txt | wc -l) = 4 ]]; then
-	echo -e "$(date)\t $SM cp passed checks, updating permissions\n" &>> $CWD/$SM/log/$SM.run.log
+	echo -e "$(date)\tend\tcp_files.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 #	chmod ugo-w $BAM/$SM.* $GVCF/$SM.*
 else
-	echo -e "$(date)\t $SM cp did not pass checks, removing files from final path, exiting\n" &>> $CWD/$SM/log/$SM.run.log
+	echo -e "$(date)\tfail\tcp_files.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 	rm $BAM/$SM.* $GVCF/$SM.*
 	scancel $SM
 	sleep 10s

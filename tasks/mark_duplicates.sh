@@ -27,18 +27,18 @@ if [[ $PERFORM = true ]]; then
 fi
 
 
-echo -e "$(date)\nMarking duplicates for sample $SM\n" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\tbegin\tmark_duplicates.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
 java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $PICARD MarkDuplicates \
 TMP_DIR=$CWD/$SM/tmp \
 INPUT=$CWD/$SM/bam/$SM.sort.bam \
 OUTPUT=$CWD/$SM/bam/$SM.markdup.bam \
 METRICS_FILE=$CWD/$SM/metrics/$SM.markdup.metrics \
-OPTICAL_DUPLICATE_PIXEL_DISTANCE=2500 &>> $CWD/$SM/log/$SM.markdup.log
+OPTICAL_DUPLICATE_PIXEL_DISTANCE=2500
 
 if [[ $(wc -c <$CWD/$SM/bam/$SM.markdup.bam) -ge 1000 ]]; then
-    echo -e "$(date)\nMark duplicates for $SM is complete\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\tend\tmark_duplicates.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\n$SM bam file after mark duplicates not found or too small, exiting\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\tfail\tmark_duplicates.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi

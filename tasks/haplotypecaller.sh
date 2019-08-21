@@ -31,6 +31,8 @@ shift; CWD=$1
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
+sleep $((RANDOM % 10))
+
 module load $JAVAMOD
 
 TASK=${SLURM_ARRAY_TASK_ID}
@@ -48,7 +50,7 @@ if [[ $PERFORM = true ]]; then
     vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_haplotypecaller_$SM_${TARGET%\.intervals}.txt &
 fi
 
-echo -e "$(date)\nHaplotypecaller for sample $SM ${TARGET%\.intervals} \n" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\tbegin\thaplotypecaller.sh\t$SM\t${TARGET%\.intervals}" &>> $CWD/$SM/log/$SM.run.log
 
 
 java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
@@ -61,8 +63,8 @@ java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
 -o $CWD/$SM/gvcf/$SM.${TARGET%\.intervals}.g.vcf.gz
 
 if [[ -s $CWD/$SM/gvcf/$SM.${TARGET%\.intervals}.g.vcf.gz ]]; then
-    echo -e "$(date)\nGenotyping for $SM ${TARGET%\.intervals} is complete\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\tend\thaplotypecaller.sh\t$SM\t${TARGET%\.intervals}" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\nGenotyping for $SM ${TARGET%\.intervals} is not found or is empty, exiting\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\tfail\thaplotypecaller.sh\t$SM\t${TARGET%\.intervals}" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi

@@ -27,7 +27,7 @@ if [[ "$1" == '--' ]]; then shift; fi
 
 module load $JAVAMOD
 
-#echo ${LOCIarr[@]:1:${#LOCIarr[@]}}
+sleep $((RANDOM % 10))
 
 TASK=${SLURM_ARRAY_TASK_ID}
 
@@ -38,7 +38,7 @@ if [[ $PERFORM = true ]]; then
     vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_indel_realigner_$SM_${TARGET%\.intervals}.txt &
 fi
 
-echo -e "$(date)\nRealigning indels on ${TARGET%\.intervals} for sample $SM\n" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\tbegin\tindel_realigner.sh\t$SM\t${TARGET%\.intervals}" &>> $CWD/$SM/log/$SM.run.log
 
 
 java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
@@ -47,11 +47,11 @@ java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
 -I $CWD/$SM/bam/$SM.markdup.bam \
 -targetIntervals $CWD/$SM/fastq/$SM.indelTarget.intervals \
 -L ${REF%/*}/target_loci/$TARGET \
--o $CWD/$SM/bam/$SM.${TARGET%\.intervals}.realign.bam &>> $CWD/$SM/log/$SM.realign.${TARGET%\.intervals}.log
+-o $CWD/$SM/bam/$SM.${TARGET%\.intervals}.realign.bam
 
 if [[ $(wc -c <$CWD/$SM/bam/$SM.${TARGET%\.intervals}.realign.bam) -ge 1000 ]]; then
-    echo -e "$(date)\nIndel realignment for ${TARGET%\.intervals} in $SM is complete\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\tend\tindel_realigner.sh\t$SM\t${TARGET%\.intervals}" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\n$SM ${TARGET%\.intervals} indel realigned bam not found or too small, exiting\n" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\tfail\tindel_realigner.sh\t$SM\t${TARGET%\.intervals}" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi
