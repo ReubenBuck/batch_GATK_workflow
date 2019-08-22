@@ -115,14 +115,18 @@ mkdir -p $CWD/$SM/gvcf
 mkdir -p $CWD/$SM/tmp
 
 
+echo ${SLURM_JOB_ID}
+
 echo -e "prepare_dirs.sh is running on $(hostname)" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
 
 # here we can start measuring performance stats
 echo -e "\n\n$(date)\nChecks for performance\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
 if [[ $PERFORM = true ]]; then
-    echo -e "$(date)\nSetting up task performance metrics\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
-    echo -e "$(date): prepare_dirs.sh is running on $(hostname)" >  $CWD/$SM/metrics/perform_prepare_dirs_$SM.txt
-    vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_prepare_dirs_$SM.txt &
+	echo -e "$(date)\nSetting up task performance metrics\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
+	echo -e "$(date): prepare_dirs.sh is running on $(hostname)\n\n\n" >  $CWD/$SM/metrics/perform_prepare_dirs_$SM.txt
+	scontrol show jobid -dd ${SLURM_JOB_ID} &>> $CWD/$SM/metrics/perform_prepare_dirs_$SM.txt
+	echo -e "\n\n\n" &>>  $CWD/$SM/metrics/perform_prepare_dirs_$SM.txt
+	vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_prepare_dirs_$SM.txt &
 elif [[ $PERFORM = false ]]; then
     echo -e "$(date)\nPerformance metrics not recorded\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
 else

@@ -34,6 +34,27 @@ fi
 
 echo -e "$(date)\tbegin\tcp_files.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
+# update permissions if old files exist
+if [[ -e $BAM/$SM.bam ]]; then
+        chmod -R u+w $BAM/$SM.bam*
+fi
+
+if [[ -e $BAM/$SM.unmap.bam ]]; then
+        chmod -R u+w $BAM/$SM.unmap.bam*
+fi
+
+if [[ -e $BAM/$SM.halfmap.bam ]]; then
+        chmod -R u+w $BAM/$SM.halfmap.bam*
+fi
+
+if [[ -e $GVCF/$SM.g.vcf.gz ]]; then
+        chmod -R u+w $GVCF/$SM.g.vcf.gz*
+fi
+
+
+
+
+
 # bams 
 echo $(md5sum $CWD/$SM/bam/$SM.$inStatus.bam | cut -f1 -d' ') $SM.bam > $BAM/$SM.bam.md5 &
 echo $(md5sum $CWD/$SM/bam/$SM.unmap.bam | cut -f1 -d' ') $SM.unmap.bam > $BAM/$SM.unmap.bam.md5 &
@@ -75,7 +96,7 @@ wait
 # make sure all checks passed
 if [[ $(grep "OK" $CWD/$SM/log/$SM.final.check.txt | wc -l) = 4 ]]; then
 	echo -e "$(date)\tend\tcp_files.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
-#	chmod ugo-w $BAM/$SM.* $GVCF/$SM.*
+	chmod ugo-w $BAM/$SM.* $GVCF/$SM.*
 else
 	echo -e "$(date)\tfail\tcp_files.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 	rm $BAM/$SM.* $GVCF/$SM.*
@@ -83,19 +104,22 @@ else
 	sleep 10s
 fi
 
+if [[ -d $LOG/$SM ]]; then
+	chmod -R u+w $LOG/$SM
+	rm -r $LOG/$SM
+fi
+
+if [[ -d $METRICS/$SM ]]; then
+	chmod -R u+w $METRICS/$SM
+	rm -r $METRICS/$SM
+fi
 
 cp -r $CWD/$SM/log $LOG/$SM &
 cp -r $CWD/$SM/metrics $METRICS/$SM &
 
 wait
 
-#chmod -R ugo-w $LOG/$SM $METRICS/$SM
 
-
-
-
-
-
-
+chmod -R ugo-w $LOG/$SM $METRICS/$SM
 
 
