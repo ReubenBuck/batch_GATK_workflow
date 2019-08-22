@@ -92,7 +92,11 @@ shift; BQSR=$1
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
-
+mkdir -p $CWD/$SM/fastq
+mkdir -p $CWD/$SM/bam
+mkdir -p $CWD/$SM/metrics
+mkdir -p $CWD/$SM/gvcf
+mkdir -p $CWD/$SM/tmp
 
 #clean and establish the working dir
 if [[ ! -z $(ls $CWD/$SM/) ]]; then
@@ -224,18 +228,18 @@ echo -e "\n\n$(date)\nProgram checks complete.....\n\n\n\n" &>> $CWD/$SM/log/pre
 # check if unaligned files exist
 echo -e "\n\n$(date)\nChecks for unaligned WGS data\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
 for i in $(seq 1 $runLen); do
-    if [[ $D2 = *".bam" ]]; then
-        if [[ -e $D1/$D2 ]]; then
-            echo -e "$(date)\nbam file $D2/$D1 found\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
+    if [[ ${D2arr[$i]} = *".bam" ]]; then
+        if [[ -e ${D1arr[$i]}/${D2arr[$i]} ]]; then
+            echo -e "$(date)\nbam file ${D1arr[$i]}/${D2arr[$i]} found\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
         else
-            echo -e "$(date)\nbam file $D2/$D1 not found, exiting\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
+            echo -e "$(date)\nbam file ${D1arr[$i]}/${D2arr[$i]} not found, exiting\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
             scancel -n $SM
         fi
-    elif [[ $D2 = *".cram" ]]; then
-        if [[ -e $D1/$D2 ]]; then
-            echo -e "$(date)\ncram file $D2/$D1 found\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
+    elif [[ ${D2arr[$i]} = *".cram" ]]; then
+        if [[ -e ${D1arr[$i]}/${D2arr[$i]} ]]; then
+            echo -e "$(date)\ncram file ${D1arr[$i]}/${D2arr[$i]} found\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
         else
-            echo -e "$(date)\ncram file $D2/$D1 not found\n", exiting &>> $CWD/$SM/log/prepare_dirs-${SM}.out
+            echo -e "$(date)\ncram file ${D1arr[$i]}/${D2arr[$i]} not found\n", exiting &>> $CWD/$SM/log/prepare_dirs-${SM}.out
             scancel -n $SM
         fi
     else
