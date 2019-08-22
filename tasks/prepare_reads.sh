@@ -69,7 +69,7 @@ module load $PIGZMOD
 
 if [[ $D2 = *".bam" ]]; then
 	echo -e "$(date)\nData is storred in unaligned bam format, converting to fastq\n"
-	samtools fastq --threads $THREADS -1 $FQDIR/$SM/$R1 -2 $FQDIR/$SM/$R2 $D1/$D2
+	samtools fastq --threads $THREADS -1 $CWD/$SM/fastq/$R1 -2 $CWD/$SM/fastq/$R2 $D1/$D2
 elif [[ $D2 = *".cram" ]]; then
 	echo -e "$(date)\nData is storred in cram format, converting to fastq\n"
 	samtools view -@ $THREADS -b -o $CWD/$SM/tmp/${D1/cram/bam} $D1/$D2 
