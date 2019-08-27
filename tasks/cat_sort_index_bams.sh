@@ -21,6 +21,9 @@ shift; BQSR=$1
 --threads )
 shift; THREADS=$1
 ;;
+--memrequest )
+shift; MEM=$1
+;;
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
@@ -58,7 +61,7 @@ fi
 
 echo -e "$(date)\tbegin\tcat_sort_index_bams.sh-sort\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
-samtools sort --threads $THREADS -o $CWD/$SM/bam/$SM.$inStatus.bam $CWD/$SM/bam/$SM.$inStatus.cat.bam
+samtools sort -m $(( MEM/THREADS ))G --threads $THREADS -o $CWD/$SM/bam/$SM.$inStatus.bam $CWD/$SM/bam/$SM.$inStatus.cat.bam
 
 if [[ -s $CWD/$SM/bam/$SM.$inStatus.bam ]]; then
     echo -e "$(date)\tend\tcat_sort_index_bams.sh-sort\t$SM\t" &>> $CWD/$SM/log/$SM.run.log

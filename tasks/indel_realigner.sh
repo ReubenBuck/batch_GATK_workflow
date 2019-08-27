@@ -22,6 +22,9 @@ shift; PERFORM=$1
 --workdir )
 shift; CWD=$1
 ;;
+--memrequest )
+shift; MEM=$1
+;;
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
@@ -43,7 +46,7 @@ fi
 echo -e "$(date)\tbegin\tindel_realigner.sh\t$SM\t${TARGET%\.intervals}" &>> $CWD/$SM/log/$SM.run.log
 
 
-java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
+java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \
 -T IndelRealigner \
 -R $REF \
 -I $CWD/$SM/bam/$SM.markdup.bam \

@@ -15,6 +15,9 @@ shift; PERFORM=$1
 --workdir )
 shift; CWD=$1
 ;;
+--memrequest )
+shift; MEM=$1
+;;
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
@@ -31,7 +34,7 @@ fi
 
 echo -e "$(date)\tbegin\tmark_duplicates.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
-java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $PICARD MarkDuplicates \
+java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $PICARD MarkDuplicates \
 TMP_DIR=$CWD/$SM/tmp \
 INPUT=$CWD/$SM/bam/$SM.sort.bam \
 OUTPUT=$CWD/$SM/bam/$SM.markdup.bam \

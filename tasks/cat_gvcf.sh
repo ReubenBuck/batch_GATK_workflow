@@ -25,6 +25,9 @@ shift; PERFORM=$1
 --workdir )
 shift; CWD=$1
 ;;
+--memrequest )
+shift; MEM=$1
+;;
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
@@ -51,7 +54,7 @@ echo -e "$(date)\tbegin\tcat_gvcf.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
 VAR=$(eval echo -e "I=$CWD/$SM/gvcf/$SM.{$(echo $LOCI)}.g.vcf.gz" | sed "s/.intervals//g")
 
-java -jar $PICARD SortVcf $VAR O=$CWD/$SM/gvcf/$SM.g.vcf.gz
+java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $PICARD SortVcf $VAR O=$CWD/$SM/gvcf/$SM.g.vcf.gz
 
 if [[ -s $CWD/$SM/gvcf/$SM.g.vcf.gz ]]; then
     echo -e "$(date)\tend\tcat_gvcf.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log

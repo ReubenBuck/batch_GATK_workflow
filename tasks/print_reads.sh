@@ -25,6 +25,9 @@ shift; PERFORM=$1
 --workdir )
 shift; CWD=$1
 ;;
+--memrequest )
+shift; MEM=$1
+;;
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
@@ -44,7 +47,7 @@ fi
 
 echo -e "$(date)\tbegin\tprint_read.sh\t$SM\t${TARGET%\.intervals}" &>> $CWD/$SM/log/$SM.run.log
 
-java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
+java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G-jar $GATK \
 -nct 20 \
 -T PrintReads \
 -R $REF \

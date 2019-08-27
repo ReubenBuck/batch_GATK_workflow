@@ -18,6 +18,9 @@ shift; PERFORM=$1
 --workdir )
 shift; CWD=$1
 ;;
+--memrequest )
+shift; MEM=$1
+;;
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
@@ -45,7 +48,7 @@ fi
 
 # sort
 echo -e "$(date)\tbegin\tmerge_sort_bams.sh-sort\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
-samtools sort --threads $THREADS -o $CWD/$SM/bam/$SM.sort.bam $CWD/$SM/bam/$SM.bam
+samtools sort --threads $THREADS -m $(( MEM/THREADS ))G -o $CWD/$SM/bam/$SM.sort.bam $CWD/$SM/bam/$SM.bam
 
 
 if [[ $(wc -c <$CWD/$SM/bam/$SM.bam) -ge 1000 ]]; then

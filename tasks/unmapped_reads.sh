@@ -33,9 +33,15 @@ echo -e "$(date)\tbegin\tunmapped_reads.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
 samtools view -@ $THREADS -Sbh -f 12 -F 0x900 $CWD/$SM/bam/$SM.markdup.bam > $CWD/$SM/bam/$SM.unmap.bam
 
+samtools index -@ $THREADS $CWD/$SM/bam/$SM.unmap.bam
+
+
 samtools view -@ $THREADS -Sbh -f 4 -F 8 -F 0x900 $CWD/$SM/bam/$SM.markdup.bam > $CWD/$SM/tmp/halfmapped.f4F8.bam
 samtools view -@ $THREADS -Sbh -f 8 -F 4 -F 0x900 $CWD/$SM/bam/$SM.markdup.bam > $CWD/$SM/tmp/halfmapped.f8F4.bam
 samtools cat $CWD/$SM/tmp/halfmapped.{f4F8,f8F4}.bam | samtools sort -@ $THREADS > $CWD/$SM/bam/$SM.halfmap.bam
+
+samtools index -@ $THREADS $CWD/$SM/bam/$SM.halfmap.bam
+
 
 if [[ $(wc -c <$CWD/$SM/bam/$SM.unmap.bam) -ge 1000 && $(wc -c <$CWD/$SM/bam/$SM.halfmap.bam) -ge 1000 ]]; then
     echo -e "$(date)\tend\tunmapped_reads.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log

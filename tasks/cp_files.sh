@@ -63,7 +63,9 @@ echo $(md5sum $CWD/$SM/bam/$SM.halfmap.bam | cut -f1 -d' ') $SM.halfmap.bam > $B
 cp $CWD/$SM/bam/$SM.$inStatus.bam $BAM/$SM.bam &
 cp $CWD/$SM/bam/$SM.$inStatus.bam.bai $BAM/$SM.bam.bai &
 cp $CWD/$SM/bam/$SM.unmap.bam $BAM/$SM.unmap.bam &
+cp $CWD/$SM/bam/$SM.unmap.bam.bai $BAM/$SM.unmap.bam.bai &
 cp $CWD/$SM/bam/$SM.halfmap.bam $BAM/$SM.halfmap.bam &
+cp $CWD/$SM/bam/$SM.halfmap.bam.bai $BAM/$SM.halfmap.bam.bai &
 
 # gvcf
 echo $(md5sum $CWD/$SM/gvcf/$SM.g.vcf.gz | cut -f1 -d' ') $SM.g.vcf.gz > $GVCF/$SM.g.vcf.gz.md5 &

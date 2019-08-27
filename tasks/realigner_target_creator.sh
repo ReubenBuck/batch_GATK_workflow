@@ -21,6 +21,9 @@ shift; CWD=$1
 --threads )
 shift; THREADS=$1
 ;;
+--memrequest )
+shift; MEM=$1
+;;
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
@@ -34,8 +37,9 @@ fi
 
 echo -e "$(date)\tbegin\trealigner_target_creator.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
-
-java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
+# will need to check how this goes, whether the nt command is enough mem per thread may not be the way to go here
+MEMTHREAD=$(( MEM/THREAD ))
+java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \
 -nt $THREADS \
 -T RealignerTargetCreator \
 -R $REF \

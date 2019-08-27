@@ -39,7 +39,7 @@ LOG=$(cat $CONFIG | sed '2q;d' | awk {'print $16'})
 runLen=$(expr $(wc -l $CONFIG | cut -d" " -f1) - 1)
 ;;
 -m | --machine-config )
-shift MACHINE=$1
+shift; MACHINE=$1
 ;;
 -r | --recal )
 BQSR=true
@@ -55,6 +55,9 @@ shift; PARTITION=$1
 ;;
 -e | --email )
 shift; EMAIL=$1
+;;
+-T | --taskdir )
+shift; TASKDIR=$1
 ;;
 -s | --samtools )
 shift; SAMTOOLSMOD=$1
@@ -98,7 +101,7 @@ sbatch \
 --mem=${prepare_dirsMEM}G --time=${prepare_dirsTIME} --nodes=1 --ntasks=${prepare_dirsNTASKS} \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
 --mail-user=$EMAIL --mail-type=FAIL,BEGIN --output=prepare_dirs-${SM}-%j.out \
-/home/buckleyrm/scripts/batch_GATK_workflow/tasks/prepare_dirs.sh --sample $SM \
+$TASKDIR/prepare_dirs.sh --sample $SM \
 --platform $PL --flowcell $FC --lane $LN --library $LB \
 --read1 $R1 --read2 $R2 --path1 $D1 --path2 $D2 \
 --ref $REF --workdir $CWD --recal $RECAL --bam $BAM \
@@ -118,7 +121,7 @@ sbatch \
 --array=1-$runLen \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/prepare_reads-${SM}-%A-%a.out \
-/home/buckleyrm/scripts/batch_GATK_workflow/tasks/prepare_reads.sh --sample $SM \
+$TASKDIR/prepare_reads.sh --sample $SM \
 --read1 $R1 --read2 $R2 --path1 $D1 --path2 $D2 --threads ${prepare_readsNTASKS} \
 --workdir $CWD --fastqc $FASTQCMOD --pigz $PIGZMOD \
 --samtools $SAMTOOLSMOD --perform $PERFORM \
@@ -134,7 +137,7 @@ sbatch \
 --array=1-$runLen --job-name=$SM --account=$ACCOUNT \
 --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/map_reads-${SM}-${TASKS}-%A-%a.out \
-/home/buckleyrm/scripts/batch_GATK_workflow/tasks/map_reads.sh --sample $SM \
+$TASKDIR/map_reads.sh --sample $SM \
 --read1 $R1 --read2 $R2 --threads ${map_readsNTASKS} \
 --workdir $CWD --bwa $BWAMOD --samtools $SAMTOOLSMOD --perform $PERFORM \
 --flowcell $FC --lane $LN --library $LB --platform $PL --ref $REF \
@@ -151,8 +154,8 @@ sbatch \
 --mem=${merge_sort_bamsMEM}G --time=${merge_sort_bamsTIME} --nodes=1 --ntasks=${merge_sort_bamsNTASKS} \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/merge_sort_bams-${SM}-%j.out \
-/home/buckleyrm/scripts/batch_GATK_workflow/tasks/merge_sort_bams.sh --sample $SM \
---threads ${merge_sort_bamsNTASKS} --runLen $runLen \
+$TASKDIR/merge_sort_bams.sh --sample $SM \
+--threads ${merge_sort_bamsNTASKS} --runLen $runLen --memrequest ${merge_sort_bamsMEM}\
 --workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM \
 
 
@@ -164,8 +167,8 @@ sbatch \
 --mem=${mark_duplicatesMEM}G --time=${mark_duplicatesTIME} --nodes=1 --ntasks=${mark_duplicatesNTASKS} \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/mark_duplicates-${SM}-%j.out \
-/home/buckleyrm/scripts/batch_GATK_workflow/tasks/mark_duplicates.sh --sample $SM \
---workdir $CWD --picard $PICARD --java $JAVAMOD --perform $PERFORM \
+$TASKDIR/mark_duplicates.sh --sample $SM \
+--workdir $CWD --picard $PICARD --java $JAVAMOD --perform $PERFORM --memrequest ${mark_duplicatesTIME}
 
 
 indexMEM=$(cat $MACHINE | grep index | cut -f 2)
@@ -176,7 +179,7 @@ IDXJOB=$(sbatch \
 --mem=${indexMEM}G --time=${indexTIME} --nodes=1 --ntasks=${indexNTASKS} \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/index-${SM}-%j.out \
-/home/buckleyrm/scripts/batch_GATK_workflow/tasks/index.sh --sample $SM \
+$TASKDIR/index.sh --sample $SM \
 --workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads ${indexNTASKS} | cut -f 4 -d ' ')
 
 echo $IDXJOB
@@ -190,7 +193,7 @@ sbatch \
 --mem=${unmapped_readsMEM}G --time=${unmapped_readsTIME} --nodes=1 --ntasks=${unmapped_readsNTASKS} \
 --job-name=${SM}-unmapped --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d afterok:$IDXJOB \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/unmapped_reads-${SM}-%j.out \
-/home/buckleyrm/scripts/batch_GATK_workflow/tasks/unmapped_reads.sh --sample $SM \
+$TASKDIR/unmapped_reads.sh --sample $SM \
 --workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads ${unmapped_readsNTASKS} \
 
 
@@ -204,9 +207,9 @@ sbatch \
 --ntasks=${realigner_target_creatorNTASKS} \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/realigner_target_creator-${SM}-%j.out \
-/home/buckleyrm/scripts/batch_GATK_workflow/tasks/realigner_target_creator.sh --sample $SM \
+$TASKDIR/realigner_target_creator.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM \
---threads ${realigner_target_creatorNTASKS}
+--threads ${realigner_target_creatorNTASKS} --memrequest ${realigner_target_creatorMEM}
 
 # indel realignment 
 lociLen=$(ls ${REF%/*}/target_loci | wc -l)
@@ -222,8 +225,9 @@ CATBAMID=$(sbatch \
 --array=1-$lociLen \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/indel_realigner-${TASKS}-%A-%a.out \
-/home/buckleyrm/scripts/batch_GATK_workflow/tasks/indel_realigner.sh --sample $SM \
---workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM --loci $LOCI | cut -f 4 -d ' ')
+$TASKDIR/indel_realigner.sh --sample $SM \
+--workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM --loci $LOCI \
+--memrequest ${indel_realignerMEM}| cut -f 4 -d ' ')
 
 
 if [[ $BQSR = true ]]; then
@@ -237,9 +241,10 @@ BQSRID=$(sbatch \
 --mem=${first_pass_bqsrMEM}G --time=${first_pass_bqsrTIME} --nodes=1 --ntasks=${first_pass_bqsrNTASKS} \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/first_pass_bqsr-${SM}-%j.out \
-/home/buckleyrm/scripts/batch_GATK_workflow/tasks/first_pass_bqsr.sh --sample $SM \
+$TASKDIR/first_pass_bqsr.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --recal $RECAL --ref $REF \
---perform $PERFORM --threads ${first_pass_bqsrNTASKS} | cut -f 4 -d ' ')
+--perform $PERFORM --threads ${first_pass_bqsrNTASKS} \
+--memrequest ${first_pass_bqsrMEM} | cut -f 4 -d ' ')
 
 echo $BQSRID
 
@@ -254,9 +259,9 @@ CATBAMID=$(sbatch \
 --array=1-$lociLen \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/print_reads-${SM}-%A-%a.out \
-/home/buckleyrm/scripts/batch_GATK_workflow/tasks/print_reads.sh --sample $SM \
+$TASKDIR/print_reads.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM \
---loci $LOCI | cut -f 4 -d ' ')
+--loci $LOCI --memrequest ${print_readsMEM} | cut -f 4 -d ' ')
 
 
 second_pass_bqsrMEM=$(cat $MACHINE | grep second_pass_bqsr | cut -f 2)
@@ -268,10 +273,10 @@ SECONDBQSRID=$(sbatch \
 -d afterok:$BQSRID  --nodes=1 \
 --job-name=${SM}-recal-plots --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/second_pass_bqsr-${SM}-%j.out \
-/home/buckleyrm/scripts/batch_GATK_workflow/tasks/second_pass_bqsr.sh --sample $SM \
+$TASKDIR/second_pass_bqsr.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --recal $RECAL --ref $REF \
 --perform $PERFORM --threads ${second_pass_bqsrNTASKS} \
- --rversion $RMOD | cut -f 4 -d ' ')
+ --rversion $RMOD --memrequest ${second_pass_bqsrMEM} | cut -f 4 -d ' ')
 
 echo $SECONFBQSRID
 
@@ -293,9 +298,9 @@ sbatch \
 --ntasks=${cat_sort_index_bamsNTASKS} \
 --job-name=${SM}-cat-bams --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d afterok:$CATBAMID \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/cat_sort_index_bams-${SM}-%j.out \
-/home/buckleyrm/scripts/batch_GATK_workflow/tasks/cat_sort_index_bams.sh --sample $SM \
+$TASKDIR/cat_sort_index_bams.sh --sample $SM \
 --ref $REF --workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads ${cat_sort_index_bamsNTASKS} \
---bqsr $BQSR
+--bqsr $BQSR --memrequest $cat_sort_index_bamsMEM
 
 
 haplotypecallerNTASKS=$(cat $MACHINE | grep haplotypecaller | cut -f 2)
@@ -307,9 +312,9 @@ sbatch \
 -d singleton --array 1-$lociLen --nodes=1 \
 --job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/haplotypecaller-${SM}-%A-%a.out \
-/home/buckleyrm/scripts/batch_GATK_workflow/tasks/haplotypecaller.sh --sample $SM \
+$TASKDIR/haplotypecaller.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --loci $LOCI --bqsr $BQSR \
---perform $PERFORM --threads ${haplotypecallerNTASKS}
+--perform $PERFORM --threads ${haplotypecallerNTASKS} --memrequest ${haplotypecallerMEM}
 
 
 cat_gvcfNTASKS=$(cat $MACHINE | grep cat_gvcf | cut -f 2)
@@ -322,9 +327,9 @@ sbatch \
 -d singleton --nodes=1 --job-name=${SM} \
 --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/cat_gvcf-${SM}-%j.out \
-/home/buckleyrm/scripts/batch_GATK_workflow/tasks/cat_gvcf.sh --sample $SM \
+$TASKDIR/cat_gvcf.sh --sample $SM \
 --workdir $CWD --picard $PICARD --java $JAVAMOD --ref $REF --loci $LOCI \
---perform $PERFORM --threads ${cat_gvcfNTASKS}
+--perform $PERFORM --threads ${cat_gvcfNTASKS} --memrequest ${cat_gvcfMEM}
 
 
 cp_filesMEM=$(cat $MACHINE | grep cp_files | cut -f 2)
@@ -335,7 +340,7 @@ FINALID=$(sbatch \
 --mem=${cp_filesMEM}G --time=${cp_filesTIME} --nodes=1 --ntasks=${cp_filesNTASKS} \
 -d singleton --job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/cp_files-${SM}-%j.out \
-/home/buckleyrm/scripts/batch_GATK_workflow/tasks/cp_files.sh --sample $SM \
+$TASKDIR/cp_files.sh --sample $SM \
 --workdir $CWD --bam $BAM --metrics $METRICS --log $LOG --gvcf $GVCF --bqsr $BQSR | cut -f 4 -d ' ')
 
 
@@ -350,7 +355,7 @@ if [[ $BQSR = true ]]; then
   -d afterok:${FINALID}:${SECONDBQSRID} \
   --job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
   --mail-user=$EMAIL --mail-type=FAIL,END --output=clean_wd-${SM}-%j.out \
-  /home/buckleyrm/scripts/batch_GATK_workflow/tasks/clean_wd.sh --sample $SM \
+  $TASKDIR/clean_wd.sh --sample $SM \
   --workdir $CWD
 
 else
@@ -360,7 +365,7 @@ else
   -d afterok:${FINALID} \
   --job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
   --mail-user=$EMAIL --mail-type=FAIL,END --output=clean_wd-${SM}-%j.out \
-  /home/buckleyrm/scripts/batch_GATK_workflow/tasks/clean_wd.sh --sample $SM \
+  $TASKDIR/clean_wd.sh --sample $SM \
   --workdir $CWD
 
 fi
