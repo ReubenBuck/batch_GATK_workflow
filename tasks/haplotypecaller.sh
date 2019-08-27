@@ -46,7 +46,9 @@ elif [[ $BQSR = false ]]; then
 fi
 
 if [[ $PERFORM = true ]]; then
-    echo -e "$(date) haplotypecaller.sh is running on $(hostname)" &>>  $CWD/$SM/metrics/perform_haplotypecaller_$SM_${TARGET%\.intervals}.txt
+    echo -e "$(date) haplotypecaller.sh is running on $(hostname)" &>> $CWD/$SM/metrics/perform_haplotypecaller_$SM_${TARGET%\.intervals}.txt
+    scontrol show jobid -dd ${SLURM_JOB_ID} &>> $CWD/$SM/metrics/perform_haplotypecaller_$SM_${TARGET%\.intervals}.txt
+    echo -e "\n\n\n" &>> $CWD/$SM/metrics/perform_haplotypecaller_$SM_${TARGET%\.intervals}.txt
     vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_haplotypecaller_$SM_${TARGET%\.intervals}.txt &
 fi
 

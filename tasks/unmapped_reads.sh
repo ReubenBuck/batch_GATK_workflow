@@ -22,7 +22,9 @@ module load $SAMTOOLSMOD
 
 
 if [[ $PERFORM = true ]]; then
-    echo -e "$(date): unmapped_reads.sh is running on $(hostname)" &>>  $CWD/$SM/metrics/perform_unmapped_reads_$SM.txt
+    echo -e "$(date): unmapped_reads.sh is running on $(hostname)" &>> $CWD/$SM/metrics/perform_unmapped_reads_$SM.txt
+    scontrol show jobid -dd ${SLURM_JOB_ID} &>> $CWD/$SM/metrics/perform_unmapped_reads_$SM.txt
+    echo -e "\n\n\n" &>> $CWD/$SM/metrics/perform_unmapped_reads_$SM.txt
     vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_unmapped_reads_$SM.txt &
 fi
 

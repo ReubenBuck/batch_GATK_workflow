@@ -65,7 +65,9 @@ sleep $((RANDOM % 10))
 
 # here we can start measuring performance stats
 if [[ $PERFORM = true ]]; then
-    echo -e "$(date): map_reads.sh task $TASK is running on $(hostname)" &>>  $CWD/$SM/metrics/perform_map_reads_$SM.$TASK.txt
+    echo -e "$(date): map_reads.sh task $TASK is running on $(hostname)" &>> $CWD/$SM/metrics/perform_map_reads_$SM.$TASK.txt
+    scontrol show jobid -dd ${SLURM_JOB_ID} &>> $CWD/$SM/metrics/perform_map_reads_$SM.$TASK.txt
+    echo -e "\n\n\n" &>> $CWD/$SM/metrics/perform_map_reads_$SM.$TASK.txt
     vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_map_reads_$SM.$TASK.txt &
 fi
 

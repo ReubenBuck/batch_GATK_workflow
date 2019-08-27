@@ -41,7 +41,9 @@ elif [[ BQSR = false ]]; then
 fi
 
 if [[ $PERFORM = true ]]; then
-    echo -e "$(date) cat_gvcf.sh is running on $(hostname)" &>>  $CWD/$SM/metrics/perform_cat_gvcf_$SM.txt
+    echo -e "$(date) cat_gvcf.sh is running on $(hostname)" &>> $CWD/$SM/metrics/perform_cat_gvcf_$SM.txt
+    scontrol show jobid -dd ${SLURM_JOB_ID} &>> $CWD/$SM/metrics/perform_cat_gvcf_$SM.txt
+    echo -e "\n\n\n" &>> $CWD/$SM/metrics/perform_cat_gvcf_$SM.txt
     vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_cat_gvcf_$SM.txt &
 fi
 

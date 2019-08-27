@@ -26,7 +26,9 @@ if [[ "$1" == '--' ]]; then shift; fi
 
 module load $JAVAMOD
 if [[ $PERFORM = true ]]; then
-    echo -e "$(date): indel_target_creator.sh is running on $(hostname)" &>>  $CWD/$SM/metrics/perform_indel_target_creator_$SM.txt
+    echo -e "$(date): indel_target_creator.sh is running on $(hostname)" &>> $CWD/$SM/metrics/perform_indel_target_creator_$SM.txt
+    scontrol show jobid -dd ${SLURM_JOB_ID} &>> $CWD/$SM/metrics/perform_indel_target_creator_$SM.txt
+    echo -e "\n\n\n" &>> $CWD/$SM/metrics/perform_indel_target_creator_$SM.txt
     vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_indel_target_creator_$SM.txt &
 fi
 

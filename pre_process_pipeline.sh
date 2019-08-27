@@ -38,6 +38,9 @@ METRICS=$(cat $CONFIG | sed '2q;d' | awk {'print $15'})
 LOG=$(cat $CONFIG | sed '2q;d' | awk {'print $16'})
 runLen=$(expr $(wc -l $CONFIG | cut -d" " -f1) - 1)
 ;;
+-m | --machine-config )
+shift MACHINE=$1
+;;
 -r | --recal )
 BQSR=true
 ;;
@@ -87,10 +90,12 @@ fi
 # need to check for partitions
 # and account and email
 
-
+prepare_dirsMEM=$(cat $MACHINE | grep prepare_dirs | cut -f 2)
+prepare_dirsTIME=$(cat $MACHINE | grep prepare_dirs | cut -f 3)
+prepare_dirsNTASKS=$(cat $MACHINE | grep prepare_dirs | cut -f 4)
 # prepare dirs
 sbatch \
---mem=10g --time=2-00:00 --nodes=1 --ntasks=1 \
+--mem=${prepare_dirsMEM}G --time=${prepare_dirsTIME} --nodes=1 --ntasks=${prepare_dirsNTASKS} \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
 --mail-user=$EMAIL --mail-type=FAIL,BEGIN --output=prepare_dirs-${SM}-%j.out \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/prepare_dirs.sh --sample $SM \
@@ -102,126 +107,171 @@ sbatch \
 --samtools $SAMTOOLSMOD --gatk $GATK --picard $PICARD \
 --runLen $runLen --perform $PERFORM --bqsr $BQSR \
 
+
+prepare_readsMEM=$(cat $MACHINE | grep prepare_reads | cut -f 2)
+prepare_readsTIME=$(cat $MACHINE | grep prepare_reads | cut -f 3)
+prepare_readsNTASKS=$(cat $MACHINE | grep prepare_reads | cut -f 4)
 # prepare reads
 # this may use some samtools options
 sbatch \
---mem=10g --time=2-00:00 --nodes=1 --ntasks=10 --array=1-$runLen \
+--mem=${prepare_readsMEM}G --time=${prepare_readsTIME} --nodes=1 --ntasks=${prepare_readsNTASKS} \
+--array=1-$runLen \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/prepare_reads-${SM}-%A-%a.out \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/prepare_reads.sh --sample $SM \
---read1 $R1 --read2 $R2 --path1 $D1 --path2 $D2 --threads 25 \
+--read1 $R1 --read2 $R2 --path1 $D1 --path2 $D2 --threads ${prepare_readsNTASKS} \
 --workdir $CWD --fastqc $FASTQCMOD --pigz $PIGZMOD \
 --samtools $SAMTOOLSMOD --perform $PERFORM \
 
+
+map_readsMEM=$(cat $MACHINE | grep map_reads | cut -f 2)
+map_readsTIME=$(cat $MACHINE | grep map_reads | cut -f 3)
+map_readsNTASKS=$(cat $MACHINE | grep map_reads | cut -f 4)
 # Map reads
 # bwa does not offer mem usage options but scales proportinally with threads
 sbatch \
---mem=100g --time=2-00:00 --nodes=1 --ntasks=10 --array=1-$runLen \
---job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
+--mem=${map_readsMEM}G --time=${map_readsTIME} --nodes=1 --ntasks=${map_readsNTASKS} \
+--array=1-$runLen --job-name=$SM --account=$ACCOUNT \
+--partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/map_reads-${SM}-${TASKS}-%A-%a.out \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/map_reads.sh --sample $SM \
---read1 $R1 --read2 $R2 --threads 25 \
+--read1 $R1 --read2 $R2 --threads ${map_readsNTASKS} \
 --workdir $CWD --bwa $BWAMOD --samtools $SAMTOOLSMOD --perform $PERFORM \
 --flowcell $FC --lane $LN --library $LB --platform $PL --ref $REF \
 
+
+merge_sort_bamsMEM=$(cat $MACHINE | grep merge_sort_bams | cut -f 2)
+merge_sort_bamsTIME=$(cat $MACHINE | grep merge_sort_bams | cut -f 3)
+merge_sort_bamsNTASKS=$(cat $MACHINE | grep merge_sort_bams | cut -f 4)
 # merge_sort_bams
 # for samtools, max mem per task can also be set
 # need to go mem/ntask to calculate
 # all calculation should be in G
 sbatch \
---mem=100g --time=2-00:00 --nodes=1 --ntasks=10 \
+--mem=${merge_sort_bamsMEM}G --time=${merge_sort_bamsTIME} --nodes=1 --ntasks=${merge_sort_bamsNTASKS} \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/merge_sort_bams-${SM}-%j.out \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/merge_sort_bams.sh --sample $SM \
---threads 25 --runLen $runLen \
+--threads ${merge_sort_bamsNTASKS} --runLen $runLen \
 --workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM \
 
+
+mark_duplicatesMEM=$(cat $MACHINE | grep mark_duplicates | cut -f 2)
+mark_duplicatesTIME=$(cat $MACHINE | grep mark_duplicates | cut -f 3)
+mark_duplicatesNTASKS=$(cat $MACHINE | grep mark_duplicates | cut -f 4)
 # mark_duplicates.sh
 sbatch \
---mem=100g --time=2-00:00 --nodes=1 --ntasks=10 \
+--mem=${mark_duplicatesMEM}G --time=${mark_duplicatesTIME} --nodes=1 --ntasks=${mark_duplicatesNTASKS} \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/mark_duplicates-${SM}-%j.out \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/mark_duplicates.sh --sample $SM \
 --workdir $CWD --picard $PICARD --java $JAVAMOD --perform $PERFORM \
 
+
+indexMEM=$(cat $MACHINE | grep index | cut -f 2)
+indexTIME=$(cat $MACHINE | grep index | cut -f 3)
+indexNTASKS=$(cat $MACHINE | grep index | cut -f 4)
 # index.sh
 IDXJOB=$(sbatch \
---mem=100g --time=2-00:00 --nodes=1 --ntasks=10 \
+--mem=${indexMEM}G --time=${indexTIME} --nodes=1 --ntasks=${indexNTASKS} \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/index-${SM}-%j.out \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/index.sh --sample $SM \
---workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads 25 | cut -f 4 -d ' ')
+--workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads ${indexNTASKS} | cut -f 4 -d ' ')
 
 echo $IDXJOB
 
+
+unmapped_readsMEM=$(cat $MACHINE | grep unmapped_reads | cut -f 2)
+unmapped_readsTIME=$(cat $MACHINE | grep unmapped_reads | cut -f 3)
+unmapped_readsNTASKS=$(cat $MACHINE | grep unmapped_reads | cut -f 4)
 # unmapped_reads.sh
 sbatch \
---mem=100g --time=2-00:00 --nodes=1 --ntasks=10 \
+--mem=${unmapped_readsMEM}G --time=${unmapped_readsTIME} --nodes=1 --ntasks=${unmapped_readsNTASKS} \
 --job-name=${SM}-unmapped --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d afterok:$IDXJOB \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/unmapped_reads-${SM}-%j.out \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/unmapped_reads.sh --sample $SM \
---workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads 25 \
+--workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads ${unmapped_readsNTASKS} \
 
+
+realigner_target_creatorMEM=$(cat $MACHINE | grep realigner_target_creator | cut -f 2)
+realigner_target_creatorTIME=$(cat $MACHINE | grep realigner_target_creator | cut -f 3)
+realigner_target_creatorNTASKS=$(cat $MACHINE | grep realigner_target_creator | cut -f 4)
 # realigner_target_creator
 # need to check nt and nct defs to determine how to set max mem usage for java 
 sbatch \
---mem=100g --time=2-00:00 --nodes=1 --ntasks=10 \
+--mem=${realigner_target_creatorMEM}G --time=${realigner_target_creatorTIME} --nodes=1 \
+--ntasks=${realigner_target_creatorNTASKS} \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/realigner_target_creator-${SM}-%j.out \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/realigner_target_creator.sh --sample $SM \
---workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM --threads 25 \
+--workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM \
+--threads ${realigner_target_creatorNTASKS}
 
 # indel realignment 
 lociLen=$(ls ${REF%/*}/target_loci | wc -l)
 LOCI=$(echo $(ls ${REF%/*}/target_loci) |  sed 's/ /,/g')
 
+
+indel_realignerMEM=$(cat $MACHINE | grep indel_realigner | cut -f 2)
+indel_realignerTIME=$(cat $MACHINE | grep indel_realigner | cut -f 3)
+indel_realignerNTASKS=$(cat $MACHINE | grep indel_realigner | cut -f 4)
 # needs a job id for cat_sort_index_bams.sh
 CATBAMID=$(sbatch \
---mem=100g --time=2-00:00 --nodes=1 --ntasks=2 --array=1-$lociLen \
+--mem=${indel_realignerMEM}G --time=${indel_realignerTIME} --nodes=1 --ntasks=${indel_realignerNTASKS} \
+--array=1-$lociLen \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/indel_realigner-${TASKS}-%A-%a.out \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/indel_realigner.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM --loci $LOCI | cut -f 4 -d ' ')
 
-#cat_sort_index.sh
-#this is the end bam for non recalibration
-#we may not need this at all
-#or maybe we can use it later
-
-
 
 if [[ $BQSR = true ]]; then
 CATBAMID=""
 
+first_pass_bqsrMEM=$(cat $MACHINE | grep first_pass_bqsr | cut -f 2)
+first_pass_bqsrTIME=$(cat $MACHINE | grep first_pass_bqsr | cut -f 3)
+first_pass_bqsrNTASKS=$(cat $MACHINE | grep first_pass_bqsr | cut -f 4)
 #first_pass_bqsr.s
 BQSRID=$(sbatch \
---mem=100g --time=2-00:00 --nodes=1 --ntasks=10 \
+--mem=${first_pass_bqsrMEM}G --time=${first_pass_bqsrTIME} --nodes=1 --ntasks=${first_pass_bqsrNTASKS} \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/first_pass_bqsr-${SM}-%j.out \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/first_pass_bqsr.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --recal $RECAL --ref $REF \
---perform $PERFORM --threads 25 | cut -f 4 -d ' ')
+--perform $PERFORM --threads ${first_pass_bqsrNTASKS} | cut -f 4 -d ' ')
 
 echo $BQSRID
 
+
+print_readsMEM=$(cat $MACHINE | grep print_reads | cut -f 2)
+print_readsTIME=$(cat $MACHINE | grep print_reads | cut -f 3)
+print_readsNTASKS=$(cat $MACHINE | grep print_reads | cut -f 4)
 # print_reads.sh
 # needs a job id for cat_sort_index_bams.sh
 CATBAMID=$(sbatch \
---mem=10g --time=2-00:00 --nodes=1 --ntasks=2 --array=1-$lociLen \
+--mem=${print_readsMEM}G --time=${print_readsTIME} --nodes=1 --ntasks=${print_readsNTASKS} \
+--array=1-$lociLen \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/print_reads-${SM}-%A-%a.out \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/print_reads.sh --sample $SM \
---workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM --loci $LOCI | cut -f 4 -d ' ')
+--workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM \
+--loci $LOCI | cut -f 4 -d ' ')
 
 
+second_pass_bqsrMEM=$(cat $MACHINE | grep second_pass_bqsr | cut -f 2)
+second_pass_bqsrTIME=$(cat $MACHINE | grep second_pass_bqsr | cut -f 3)
+second_pass_bqsrNTASKS=$(cat $MACHINE | grep second_pass_bqsr | cut -f 4)
 # second_pass_bqsr.sh
 SECONDBQSRID=$(sbatch \
---mem=50g --time=2-00:00 --nodes=1 --ntasks=10 -d afterok:$BQSRID \
+--mem=${second_pass_bqsrMEM}G --time=${second_pass_bqsrTIME} --ntasks=${second_pass_bqsrNTASKS} \
+-d afterok:$BQSRID  --nodes=1 \
 --job-name=${SM}-recal-plots --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/second_pass_bqsr-${SM}-%j.out \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/second_pass_bqsr.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --recal $RECAL --ref $REF \
---perform $PERFORM --threads 10 --rversion $RMOD | cut -f 4 -d ' ')
+--perform $PERFORM --threads ${second_pass_bqsrNTASKS} \
+ --rversion $RMOD | cut -f 4 -d ' ')
 
 echo $SECONFBQSRID
 
@@ -229,39 +279,46 @@ fi
 
 echo $CATBAMID
 
+
+cat_sort_index_bamsMEM=$(cat $MACHINE | grep cat_sort_index_bams | cut -f 2)
+cat_sort_index_bamsTIME=$(cat $MACHINE | grep cat_sort_index_bams | cut -f 3)
+cat_sort_index_bamsNTASKS=$(cat $MACHINE | grep cat_sort_index_bams | cut -f 4)
 # cat_sort_index.sh
 # this can run parallele to haplotype caller
 # needs to take two alternative jobIDs, no we can just overwrite the variable if bqsr is true
 # push the output to final destination
 # then get an md5sum
 sbatch \
---mem=100g --time=2-00:00 --nodes=1 --ntasks=10 \
+--mem=${cat_sort_index_bamsMEM}G --time=${cat_sort_index_bamsTIME} --nodes=1 \
+--ntasks=${cat_sort_index_bamsNTASKS} \
 --job-name=${SM}-cat-bams --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d afterok:$CATBAMID \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/cat_sort_index_bams-${SM}-%j.out \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/cat_sort_index_bams.sh --sample $SM \
---ref $REF --workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads 25 --bqsr $BQSR \
+--ref $REF --workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads ${cat_sort_index_bamsNTASKS} \
+--bqsr $BQSR
 
 
+haplotypecallerNTASKS=$(cat $MACHINE | grep haplotypecaller | cut -f 2)
+haplotypecallerMEM=$(cat $MACHINE | grep haplotypecaller | cut -f 3)
+haplotypecallerTIME=$(cat $MACHINE | grep haplotypecaller | cut -f 4)
 # haplotype caller
-haplotypecallerNTASKS=20
-haplotypecallerMEM="200g"
-haplotypecallerTIME="2-00:00"
 sbatch \
---mem=$haplotypecallerMEM --time=$haplotypecallerTIME --ntasks=$haplotypecallerNTASKS \
+--mem=${haplotypecallerMEM}G --time=${haplotypecallerTIME} --ntasks=${haplotypecallerNTASKS} \
 -d singleton --array 1-$lociLen --nodes=1 \
 --job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/haplotypecaller-${SM}-%A-%a.out \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/haplotypecaller.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --loci $LOCI --bqsr $BQSR \
---perform $PERFORM --threads $haplotypecallerNTASKS
+--perform $PERFORM --threads ${haplotypecallerNTASKS}
 
+
+cat_gvcfNTASKS=$(cat $MACHINE | grep cat_gvcf | cut -f 2)
+cat_gvcfMEM=$(cat $MACHINE | grep cat_gvcf | cut -f 3)
+cat_gvcfTIME=$(cat $MACHINE | grep cat_gvcf | cut -f 4)
 # cat gvcfs
 # for samtools tasks we could put more into mem
-cat_gvcfNTASKS=10
-cat_gvcfMEM="100g"
-cat_gvcfTIME="2-00:00"
 sbatch \
---mem=${cat_gvcfMEM} --time=${cat_gvcfTIME} --ntasks=${cat_gvcfNTASKS} \
+--mem=${cat_gvcfMEM}G --time=${cat_gvcfTIME} --ntasks=${cat_gvcfNTASKS} \
 -d singleton --nodes=1 --job-name=${SM} \
 --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/cat_gvcf-${SM}-%j.out \
@@ -270,32 +327,41 @@ sbatch \
 --perform $PERFORM --threads ${cat_gvcfNTASKS}
 
 
+cp_filesMEM=$(cat $MACHINE | grep cp_files | cut -f 2)
+cp_filesTIME=$(cat $MACHINE | grep cp_files | cut -f 3)
+cp_filesNTASKS=$(cat $MACHINE | grep cp_files | cut -f 4)
 # move everything to final place
 FINALID=$(sbatch \
---mem=10g --time=2-00:00 --nodes=1 --ntasks=10 -d singleton \
---job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
+--mem=${cp_filesMEM}G --time=${cp_filesTIME} --nodes=1 --ntasks=${cp_filesNTASKS} \
+-d singleton --job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/cp_files-${SM}-%j.out \
 /home/buckleyrm/scripts/batch_GATK_workflow/tasks/cp_files.sh --sample $SM \
 --workdir $CWD --bam $BAM --metrics $METRICS --log $LOG --gvcf $GVCF --bqsr $BQSR | cut -f 4 -d ' ')
 
+
+clean_wdMEM=$(cat $MACHINE | grep clean_wd | cut -f 2)
+clean_wdTIME=$(cat $MACHINE | grep clean_wd | cut -f 3)
+clean_wdNTASKS=$(cat $MACHINE | grep clean_wd | cut -f 4)
 # clean the working dir
 if [[ $BQSR = true ]]; then
 
-sbatch \
---mem=10g --time=2-00:00 --nodes=1 --ntasks=1 -d afterok:${FINALID}:${SECONDBQSRID} \
---job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
---mail-user=$EMAIL --mail-type=FAIL,END --output=clean_wd-${SM}-%j.out \
-/home/buckleyrm/scripts/batch_GATK_workflow/tasks/clean_wd.sh --sample $SM \
---workdir $CWD
+  sbatch \
+  --mem=${clean_wdMEM}G --time=${clean_wdTIME} --nodes=1 --ntasks=${clean_wdNTASKS} \
+  -d afterok:${FINALID}:${SECONDBQSRID} \
+  --job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
+  --mail-user=$EMAIL --mail-type=FAIL,END --output=clean_wd-${SM}-%j.out \
+  /home/buckleyrm/scripts/batch_GATK_workflow/tasks/clean_wd.sh --sample $SM \
+  --workdir $CWD
 
 else
 
-sbatch \
---mem=10g --time=2-00:00 --nodes=1 --ntasks=1 -d afterok:${FINALID} \
---job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
---mail-user=$EMAIL --mail-type=FAIL,END --output=clean_wd-${SM}-%j.out \
-/home/buckleyrm/scripts/batch_GATK_workflow/tasks/clean_wd.sh --sample $SM \
---workdir $CWD
+  sbatch \
+  --mem=${clean_wdMEM}G --time=${clean_wdTIME} --nodes=1 --ntasks=${clean_wdNTASKS} \
+  -d afterok:${FINALID} \
+  --job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
+  --mail-user=$EMAIL --mail-type=FAIL,END --output=clean_wd-${SM}-%j.out \
+  /home/buckleyrm/scripts/batch_GATK_workflow/tasks/clean_wd.sh --sample $SM \
+  --workdir $CWD
 
 fi
 

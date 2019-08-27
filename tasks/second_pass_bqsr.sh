@@ -34,7 +34,9 @@ module load $JAVAMOD
 module load $RMOD
 
 if [[ $PERFORM = true ]]; then
-    echo -e "$(date): second_pass_bqsr.sh is running on $(hostname)" &>>  $CWD/$SM/metrics/perform_second_pass_bqsr_$SM.txt
+    echo -e "$(date): second_pass_bqsr.sh is running on $(hostname)" &>> $CWD/$SM/metrics/perform_second_pass_bqsr_$SM.txt
+    scontrol show jobid -dd ${SLURM_JOB_ID} &>> $CWD/$SM/metrics/perform_second_pass_bqsr_$SM.txt
+    echo -e "\n\n\n" &>> $CWD/$SM/metrics/perform_second_pass_bqsr_$SM.txt
     vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_second_pass_bqsr_$SM.txt &
 fi
 
