@@ -155,7 +155,7 @@ sbatch \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/merge_sort_bams-${SM}-%j.out \
 $TASKDIR/merge_sort_bams.sh --sample $SM \
---threads ${merge_sort_bamsNTASKS} --runLen $runLen --memrequest ${merge_sort_bamsMEM}\
+--threads ${merge_sort_bamsNTASKS} --runLen $runLen --memrequest ${merge_sort_bamsMEM} \
 --workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM \
 
 
@@ -168,12 +168,12 @@ sbatch \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/mark_duplicates-${SM}-%j.out \
 $TASKDIR/mark_duplicates.sh --sample $SM \
---workdir $CWD --picard $PICARD --java $JAVAMOD --perform $PERFORM --memrequest ${mark_duplicatesTIME}
+--workdir $CWD --picard $PICARD --java $JAVAMOD --perform $PERFORM --memrequest ${mark_duplicatesMEM} \
 
 
-indexMEM=$(cat $MACHINE | grep index | cut -f 2)
-indexTIME=$(cat $MACHINE | grep index | cut -f 3)
-indexNTASKS=$(cat $MACHINE | grep index | cut -f 4)
+indexMEM=$(cat $MACHINE | grep -P "^index\t" | cut -f 2)
+indexTIME=$(cat $MACHINE | grep -P "^index\t" | cut -f 3)
+indexNTASKS=$(cat $MACHINE | grep -P "^index\t" | cut -f 4)
 # index.sh
 IDXJOB=$(sbatch \
 --mem=${indexMEM}G --time=${indexTIME} --nodes=1 --ntasks=${indexNTASKS} \
@@ -227,8 +227,9 @@ CATBAMID=$(sbatch \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/indel_realigner-${TASKS}-%A-%a.out \
 $TASKDIR/indel_realigner.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM --loci $LOCI \
---memrequest ${indel_realignerMEM}| cut -f 4 -d ' ')
+--memrequest ${indel_realignerMEM} | cut -f 4 -d ' ')
 
+echo $CATBAMID yes
 
 if [[ $BQSR = true ]]; then
 CATBAMID=""
@@ -278,7 +279,7 @@ $TASKDIR/second_pass_bqsr.sh --sample $SM \
 --perform $PERFORM --threads ${second_pass_bqsrNTASKS} \
  --rversion $RMOD --memrequest ${second_pass_bqsrMEM} | cut -f 4 -d ' ')
 
-echo $SECONFBQSRID
+echo $SECONDBQSRID
 
 fi
 
@@ -303,9 +304,9 @@ $TASKDIR/cat_sort_index_bams.sh --sample $SM \
 --bqsr $BQSR --memrequest $cat_sort_index_bamsMEM
 
 
-haplotypecallerNTASKS=$(cat $MACHINE | grep haplotypecaller | cut -f 2)
-haplotypecallerMEM=$(cat $MACHINE | grep haplotypecaller | cut -f 3)
-haplotypecallerTIME=$(cat $MACHINE | grep haplotypecaller | cut -f 4)
+haplotypecallerMEM=$(cat $MACHINE | grep haplotypecaller | cut -f 2)
+haplotypecallerTIME=$(cat $MACHINE | grep haplotypecaller | cut -f 3)
+haplotypecallerNTASKS=$(cat $MACHINE | grep haplotypecaller | cut -f 4)
 # haplotype caller
 sbatch \
 --mem=${haplotypecallerMEM}G --time=${haplotypecallerTIME} --ntasks=${haplotypecallerNTASKS} \
@@ -317,57 +318,60 @@ $TASKDIR/haplotypecaller.sh --sample $SM \
 --perform $PERFORM --threads ${haplotypecallerNTASKS} --memrequest ${haplotypecallerMEM}
 
 
-cat_gvcfNTASKS=$(cat $MACHINE | grep cat_gvcf | cut -f 2)
-cat_gvcfMEM=$(cat $MACHINE | grep cat_gvcf | cut -f 3)
-cat_gvcfTIME=$(cat $MACHINE | grep cat_gvcf | cut -f 4)
+cat_gvcfMEM=$(cat $MACHINE | grep cat_gvcf | cut -f 2)
+cat_gvcfTIME=$(cat $MACHINE | grep cat_gvcf | cut -f 3)
+cat_gvcfNTASKS=$(cat $MACHINE | grep cat_gvcf | cut -f 4)
+
 # cat gvcfs
 # for samtools tasks we could put more into mem
-sbatch \
+VARCALLID=$(sbatch \
 --mem=${cat_gvcfMEM}G --time=${cat_gvcfTIME} --ntasks=${cat_gvcfNTASKS} \
 -d singleton --nodes=1 --job-name=${SM} \
 --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/cat_gvcf-${SM}-%j.out \
 $TASKDIR/cat_gvcf.sh --sample $SM \
 --workdir $CWD --picard $PICARD --java $JAVAMOD --ref $REF --loci $LOCI \
---perform $PERFORM --threads ${cat_gvcfNTASKS} --memrequest ${cat_gvcfMEM}
+--perform $PERFORM --memrequest ${cat_gvcfMEM} | cut -f 4 -d ' ')
+echo $VARCALLID
+
 
 
 cp_filesMEM=$(cat $MACHINE | grep cp_files | cut -f 2)
 cp_filesTIME=$(cat $MACHINE | grep cp_files | cut -f 3)
 cp_filesNTASKS=$(cat $MACHINE | grep cp_files | cut -f 4)
 # move everything to final place
+
+if [[ $BQSR = true ]]; then
+
 FINALID=$(sbatch \
 --mem=${cp_filesMEM}G --time=${cp_filesTIME} --nodes=1 --ntasks=${cp_filesNTASKS} \
--d singleton --job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
+-d afterok:${VARCALLID}:${SECONDBQSRID} --job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/cp_files-${SM}-%j.out \
 $TASKDIR/cp_files.sh --sample $SM \
 --workdir $CWD --bam $BAM --metrics $METRICS --log $LOG --gvcf $GVCF --bqsr $BQSR | cut -f 4 -d ' ')
+
+else
+
+FINALID=$(sbatch \
+--mem=${cp_filesMEM}G --time=${cp_filesTIME} --nodes=1 --ntasks=${cp_filesNTASKS} \
+-d afterok:${VARCALLID} --job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
+--mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/cp_files-${SM}-%j.out \
+$TASKDIR/cp_files.sh --sample $SM \
+--workdir $CWD --bam $BAM --metrics $METRICS --log $LOG --gvcf $GVCF --bqsr $BQSR | cut -f 4 -d ' ')
+
+fi
 
 
 clean_wdMEM=$(cat $MACHINE | grep clean_wd | cut -f 2)
 clean_wdTIME=$(cat $MACHINE | grep clean_wd | cut -f 3)
 clean_wdNTASKS=$(cat $MACHINE | grep clean_wd | cut -f 4)
-# clean the working dir
-if [[ $BQSR = true ]]; then
-
-  sbatch \
-  --mem=${clean_wdMEM}G --time=${clean_wdTIME} --nodes=1 --ntasks=${clean_wdNTASKS} \
-  -d afterok:${FINALID}:${SECONDBQSRID} \
-  --job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
-  --mail-user=$EMAIL --mail-type=FAIL,END --output=clean_wd-${SM}-%j.out \
-  $TASKDIR/clean_wd.sh --sample $SM \
-  --workdir $CWD
-
-else
-
-  sbatch \
-  --mem=${clean_wdMEM}G --time=${clean_wdTIME} --nodes=1 --ntasks=${clean_wdNTASKS} \
-  -d afterok:${FINALID} \
-  --job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
-  --mail-user=$EMAIL --mail-type=FAIL,END --output=clean_wd-${SM}-%j.out \
-  $TASKDIR/clean_wd.sh --sample $SM \
-  --workdir $CWD
-
-fi
+#clean the working dir
+sbatch \
+--mem=${clean_wdMEM}G --time=${clean_wdTIME} --nodes=1 --ntasks=${clean_wdNTASKS} \
+-d afterok:${FINALID} \
+--job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
+--mail-user=$EMAIL --mail-type=FAIL,END --output=clean_wd-${SM}-%j.out \
+$TASKDIR/clean_wd.sh --sample $SM \
+--workdir $CWD
 
 

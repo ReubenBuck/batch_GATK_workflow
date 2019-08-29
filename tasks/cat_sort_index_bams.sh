@@ -61,7 +61,7 @@ fi
 
 echo -e "$(date)\tbegin\tcat_sort_index_bams.sh-sort\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
-samtools sort -m $(( MEM/THREADS ))G --threads $THREADS -o $CWD/$SM/bam/$SM.$inStatus.bam $CWD/$SM/bam/$SM.$inStatus.cat.bam
+samtools sort -m $(( MEM*1000/THREADS ))M --threads $THREADS -o $CWD/$SM/bam/$SM.$inStatus.bam $CWD/$SM/bam/$SM.$inStatus.cat.bam
 
 if [[ -s $CWD/$SM/bam/$SM.$inStatus.bam ]]; then
     echo -e "$(date)\tend\tcat_sort_index_bams.sh-sort\t$SM\t" &>> $CWD/$SM/log/$SM.run.log

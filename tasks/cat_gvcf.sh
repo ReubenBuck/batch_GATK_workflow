@@ -31,6 +31,8 @@ shift; MEM=$1
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
+echo $MEM
+
 module load $JAVAMOD
 
 TASK=${SLURM_ARRAY_TASK_ID}
@@ -53,6 +55,8 @@ fi
 echo -e "$(date)\tbegin\tcat_gvcf.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
 VAR=$(eval echo -e "I=$CWD/$SM/gvcf/$SM.{$(echo $LOCI)}.g.vcf.gz" | sed "s/.intervals//g")
+
+echo ${MEM}
 
 java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $PICARD SortVcf $VAR O=$CWD/$SM/gvcf/$SM.g.vcf.gz
 
