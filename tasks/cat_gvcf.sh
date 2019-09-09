@@ -52,7 +52,7 @@ if [[ $PERFORM = true ]]; then
     vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_cat_gvcf_$SM.txt &
 fi
 
-echo -e "$(date)\tbegin\tcat_gvcf.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tcat_gvcf.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
 VAR=$(eval echo -e "I=$CWD/$SM/gvcf/$SM.{$(echo $LOCI)}.g.vcf.gz" | sed "s/.intervals//g")
 
@@ -61,8 +61,8 @@ echo ${MEM}
 java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $PICARD SortVcf $VAR O=$CWD/$SM/gvcf/$SM.g.vcf.gz
 
 if [[ -s $CWD/$SM/gvcf/$SM.g.vcf.gz ]]; then
-    echo -e "$(date)\tend\tcat_gvcf.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tend\tcat_gvcf.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\tfail\tcat_gvcf.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tcat_gvcf.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi

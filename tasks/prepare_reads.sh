@@ -53,7 +53,7 @@ sleep $((RANDOM % 10))
 echo -e "$(date)\nVariables in prepare_reads.sh task $TASK have been assigned as,\nR1 is ${R1}\nR2 is ${R2}\nD1 is ${D1}\nD2 is ${D2}\n"
 
 
-echo -e "$(date)\tbegin\tprepare_reads.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tprepare_reads.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
 
 # here we can start measuring performance stats
 if [[ $PERFORM = true ]]; then
@@ -86,15 +86,13 @@ fi
 # check if file succesfully uncompressed
 if [[ -s $CWD/$SM/fastq/$R1 && -s $CWD/$SM/fastq/$R2 ]]; then
 	echo -e "$(date)\nUncompressed read pair files found for task no. $TASK, continuing\n"
+	echo -e "$(date)\t${SLURM_JOB_ID}\tend\tprepare_reads.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
 else
 	echo -e "$(date)\nUncompressed read pair files not found for task no. $TASK, exiting\n"
+	echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tprepare_reads.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
 	scancel -n $SM
 fi
 
-	# check quality with fastqc
-echo -e "$(date)\nFastqc quality checks for task no. $TASK ...\n"
-fastqc -o $CWD/$SM/metrics -d $CWD/$SM/tmp -t $THREADS $CWD/$SM/fastq/$R1 $CWD/$SM/fastq/$R2
 
-echo -e "$(date)\nReads are prepared for mapping for task no. $TASK \n"
 
-echo -e "$(date)\tend\tprepare_reads.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
+

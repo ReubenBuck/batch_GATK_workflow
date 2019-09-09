@@ -39,7 +39,7 @@ if [[ $PERFORM = true ]]; then
     vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_first_pass_bqsr_$SM.txt &
 fi
 
-echo -e "$(date)\tbegin\tfirst_pass_bqsr.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tfirst_pass_bqsr.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
 # make a list of bams to pass to BQSR
 LOCI=$(echo $(ls ${REF%/*}/target_loci) |  sed 's/.intervals//g' | sed 's/ /,/g')
@@ -56,8 +56,8 @@ java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \
     -PF $CWD/$SM/metrics/PF.BaseRecalibrator.$SM.txt
 
 if [[ -s $CWD/$SM/metrics/$SM.recal_data.table ]]; then
-    echo -e "$(date)\tend\tfirst_pass_bqsr.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tend\tfirst_pass_bqsr.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\tfail\tfirst_pass_bqsr.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tfirst_pass_bqsr.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi

@@ -3,7 +3,7 @@
 BQSR=false
 PERFORM=false
 
-SAMTOOLSMOD=samtools/samtools-1.9-test
+SAMTOOLSMOD=samtools/samtools-1.9
 GATK=/cluster/software/gatk/gatk-3.8/GenomeAnalysisTK.jar
 PICARD=/cluster/software/picard-tools/picard-tools-2.1.1/picard.jar
 JAVAMOD=java/openjdk/java-1.8.0-openjdk
@@ -120,7 +120,7 @@ sbatch \
 --mem=${prepare_readsMEM}G --time=${prepare_readsTIME} --nodes=1 --ntasks=${prepare_readsNTASKS} \
 --array=1-$runLen \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
---mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/prepare_reads-${SM}-%A-%a.out \
+--mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/prepare_reads-${SM}-%A-%a-%j.out \
 $TASKDIR/prepare_reads.sh --sample $SM \
 --read1 $R1 --read2 $R2 --path1 $D1 --path2 $D2 --threads ${prepare_readsNTASKS} \
 --workdir $CWD --fastqc $FASTQCMOD --pigz $PIGZMOD \
@@ -136,7 +136,7 @@ sbatch \
 --mem=${map_readsMEM}G --time=${map_readsTIME} --nodes=1 --ntasks=${map_readsNTASKS} \
 --array=1-$runLen --job-name=$SM --account=$ACCOUNT \
 --partition=$PARTITION $EXCLUSIVE -d singleton \
---mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/map_reads-${SM}-${TASKS}-%A-%a.out \
+--mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/map_reads-${SM}-${TASKS}-%A-%a-%j.out \
 $TASKDIR/map_reads.sh --sample $SM \
 --read1 $R1 --read2 $R2 --threads ${map_readsNTASKS} \
 --workdir $CWD --bwa $BWAMOD --samtools $SAMTOOLSMOD --perform $PERFORM \
@@ -224,7 +224,7 @@ CATBAMID=$(sbatch \
 --mem=${indel_realignerMEM}G --time=${indel_realignerTIME} --nodes=1 --ntasks=${indel_realignerNTASKS} \
 --array=1-$lociLen \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
---mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/indel_realigner-${TASKS}-%A-%a.out \
+--mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/indel_realigner-${TASKS}-%A-%a-%j.out \
 $TASKDIR/indel_realigner.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM --loci $LOCI \
 --memrequest ${indel_realignerMEM} | cut -f 4 -d ' ')
@@ -259,7 +259,7 @@ CATBAMID=$(sbatch \
 --mem=${print_readsMEM}G --time=${print_readsTIME} --nodes=1 --ntasks=${print_readsNTASKS} \
 --array=1-$lociLen \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
---mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/print_reads-${SM}-%A-%a.out \
+--mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/print_reads-${SM}-%A-%a-%j.out \
 $TASKDIR/print_reads.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM \
 --loci $LOCI --memrequest ${print_readsMEM} | cut -f 4 -d ' ')
@@ -312,7 +312,7 @@ sbatch \
 --mem=${haplotypecallerMEM}G --time=${haplotypecallerTIME} --ntasks=${haplotypecallerNTASKS} \
 -d singleton --array 1-$lociLen --nodes=1 \
 --job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
---mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/haplotypecaller-${SM}-%A-%a.out \
+--mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/haplotypecaller-${SM}-%A-%a-%j.out \
 $TASKDIR/haplotypecaller.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --loci $LOCI --bqsr $BQSR \
 --perform $PERFORM --threads ${haplotypecallerNTASKS} --memrequest ${haplotypecallerMEM}
@@ -333,6 +333,9 @@ $TASKDIR/cat_gvcf.sh --sample $SM \
 --workdir $CWD --picard $PICARD --java $JAVAMOD --ref $REF --loci $LOCI \
 --perform $PERFORM --memrequest ${cat_gvcfMEM} | cut -f 4 -d ' ')
 echo $VARCALLID
+
+# here we can measure the time and mem each process takes
+
 
 
 

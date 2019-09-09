@@ -32,7 +32,7 @@ if [[ $PERFORM = true ]]; then
 fi
 
 
-echo -e "$(date)\tbegin\tmark_duplicates.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tmark_duplicates.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
 java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $PICARD MarkDuplicates \
 TMP_DIR=$CWD/$SM/tmp \
@@ -42,8 +42,8 @@ METRICS_FILE=$CWD/$SM/metrics/$SM.markdup.metrics \
 OPTICAL_DUPLICATE_PIXEL_DISTANCE=2500
 
 if [[ $(wc -c <$CWD/$SM/bam/$SM.markdup.bam) -ge 1000 ]]; then
-    echo -e "$(date)\tend\tmark_duplicates.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tend\tmark_duplicates.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\tfail\tmark_duplicates.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tmark_duplicates.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi

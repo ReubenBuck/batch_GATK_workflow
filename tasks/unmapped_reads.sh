@@ -29,7 +29,7 @@ if [[ $PERFORM = true ]]; then
 fi
 
 
-echo -e "$(date)\tbegin\tunmapped_reads.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tunmapped_reads.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
 samtools view -@ $THREADS -Sbh -f 12 -F 0x900 $CWD/$SM/bam/$SM.markdup.bam > $CWD/$SM/bam/$SM.unmap.bam
 
@@ -44,9 +44,9 @@ samtools index -@ $THREADS $CWD/$SM/bam/$SM.halfmap.bam
 
 
 if [[ $(wc -c <$CWD/$SM/bam/$SM.unmap.bam) -ge 1000 && $(wc -c <$CWD/$SM/bam/$SM.halfmap.bam) -ge 1000 ]]; then
-    echo -e "$(date)\tend\tunmapped_reads.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tend\tunmapped_reads.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\tfail\tunmapped_reads.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tunmapped_reads.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi
 

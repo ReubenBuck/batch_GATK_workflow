@@ -107,10 +107,10 @@ if [[ ! -z $(ls $CWD/$SM/) ]]; then
         rm -r $CWD/$SM/*
         mkdir -p $CWD/$SM/log
     fi
-    echo -e "$(date)\tbegin\tprepare_dirs.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tprepare_dirs.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 else
     mkdir -p $CWD/$SM/log
-    echo -e "$(date)\tbegin\tprepare_dirs.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tprepare_dirs.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 fi
 mkdir -p $CWD/$SM/fastq
 mkdir -p $CWD/$SM/bam
@@ -348,4 +348,4 @@ echo -e "\n\n$(date)\nFinal destination checks complete.....\n\n\n\n" &>> $CWD/$
 
 echo -e "\n\n$(date)\nFile and program checks complete, moving on...\n\n\n\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
 
-echo -e "$(date)\tend\tprepare_dirs.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\t${SLURM_JOB_ID}\tend\tprepare_dirs.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log

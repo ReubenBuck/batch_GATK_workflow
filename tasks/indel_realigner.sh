@@ -43,7 +43,7 @@ if [[ $PERFORM = true ]]; then
     vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_indel_realigner_$SM_${TARGET%\.intervals}.txt &
 fi
 
-echo -e "$(date)\tbegin\tindel_realigner.sh\t$SM\t${TARGET%\.intervals}" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tindel_realigner.sh\t$SM\t${TARGET%\.intervals}" &>> $CWD/$SM/log/$SM.run.log
 
 
 java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \
@@ -55,8 +55,8 @@ java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \
 -o $CWD/$SM/bam/$SM.${TARGET%\.intervals}.realign.bam
 
 if [[ $(wc -c <$CWD/$SM/bam/$SM.${TARGET%\.intervals}.realign.bam) -ge 1000 ]]; then
-    echo -e "$(date)\tend\tindel_realigner.sh\t$SM\t${TARGET%\.intervals}" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tend\tindel_realigner.sh\t$SM\t${TARGET%\.intervals}" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\tfail\tindel_realigner.sh\t$SM\t${TARGET%\.intervals}" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tindel_realigner.sh\t$SM\t${TARGET%\.intervals}" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi

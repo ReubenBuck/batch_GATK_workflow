@@ -29,13 +29,13 @@ if [[ $PERFORM = true ]]; then
 fi
 
 
-echo -e "$(date)\tbegin\tindex.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tindex.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
 samtools index -@ $THREADS $CWD/$SM/bam/$SM.markdup.bam
 
 if [[ -s $CWD/$SM/bam/$SM.markdup.bam.bai ]]; then
-    echo -e "$(date)\tend\tindex.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tend\tindex.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\tfail\tindex.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tindex.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi

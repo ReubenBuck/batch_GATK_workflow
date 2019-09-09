@@ -35,7 +35,7 @@ if [[ $PERFORM = true ]]; then
     vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_indel_target_creator_$SM.txt &
 fi
 
-echo -e "$(date)\tbegin\trealigner_target_creator.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\trealigner_target_creator.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
 # will need to check how this goes, whether the nt command is enough mem per thread may not be the way to go here
 MEMTHREAD=$(( MEM/THREAD ))
@@ -48,8 +48,8 @@ java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \
 
 
 if [[ $(wc -c <$CWD/$SM/fastq/$SM.indelTarget.intervals) -ge 1000 ]]; then
-    echo -e "$(date)\tend\trealigner_target_creator.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tend\trealigner_target_creator.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\tfail\trealigner_target_creator.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tfail\trealigner_target_creator.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi

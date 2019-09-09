@@ -35,27 +35,27 @@ if [[ $PERFORM = true ]]; then
 fi
 
 # merging
-echo -e "$(date)\tbegin\tmerge_sort_bams.sh-merge\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tmerge_sort_bams.sh-merge\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
 eval samtools merge -c -f --threads $THREADS $CWD/$SM/bam/$SM.bam $CWD/$SM/bam/$SM.{1..$runLen}.bam
 
 if [[ $(wc -c <$CWD/$SM/bam/$SM.bam) -ge 1000 ]]; then
-    echo -e "$(date)\tend\tmerge_sort_bams.sh-merge\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tend\tmerge_sort_bams.sh-merge\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\tfail\tmerge_sort_bams.sh-merge\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tmerge_sort_bams.sh-merge\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi
 
 # sort
-echo -e "$(date)\tbegin\tmerge_sort_bams.sh-sort\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tmerge_sort_bams.sh-sort\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 samtools sort --threads $THREADS -m $(( MEM*1000/THREADS ))M -o $CWD/$SM/bam/$SM.sort.bam $CWD/$SM/bam/$SM.bam
 
 
 if [[ $(wc -c <$CWD/$SM/bam/$SM.bam) -ge 1000 ]]; then
     samtools flagstat -@ $THREADS $CWD/$SM/bam/$SM.sort.bam &>> $CWD/$SM/metrics/$SM.sort.flagstat.txt
-    echo -e "$(date)\tend\tmerge_sort_bams.sh-sort\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tend\tmerge_sort_bams.sh-sort\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\tfail\tmerge_sort_bams.sh-sort\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tmerge_sort_bams.sh-sort\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi
 

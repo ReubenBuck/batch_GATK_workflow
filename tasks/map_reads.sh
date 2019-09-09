@@ -75,7 +75,7 @@ fi
 #set up read groups
 RG="@RG\tID:${LB}.${FC}.${LN}\tPU:${LB}.${FC}.${LN}\tSM:${SM}\tPL:${PL}\tLB:${LB}"
 
-echo -e "$(date)\tbegin\tmap_reads.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tmap_reads.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
 
 echo $RG
 	
@@ -83,9 +83,9 @@ echo $RG
 
 if [[ $(wc -c <$CWD/$SM/bam/$SM.$TASK.bam) -ge 1000 ]]; then
 	samtools flagstat -@ $THREADS $CWD/$SM/bam/$SM.$TASK.bam &>> $CWD/$SM/metrics/$SM.$TASK.flagstat.txt
-	echo -e "$(date)\tend\tmap_reads.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
+	echo -e "$(date)\t${SLURM_JOB_ID}\tend\tmap_reads.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
 else
-	echo -e "$(date)\tfail\tmap_reads.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
+	echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tmap_reads.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
 	scancel -n $SM
 fi
 

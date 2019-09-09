@@ -43,7 +43,7 @@ if [[ $PERFORM = true ]]; then
     vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_second_pass_bqsr_$SM.txt &
 fi
 
-echo -e "$(date)\tbegin\tsecond_pass_bqsr.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tsecond_pass_bqsr.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
 java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \
 -nct $THREADS \
@@ -55,13 +55,13 @@ java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \
 -BQSR $CWD/$SM/metrics/$SM.recal_data.table
 
 if [[ -s $CWD/$SM/metrics/$SM.post_recal_data.table ]]; then
-    echo -e "$(date)\tend\tsecond_pass_bqsr.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tend\tsecond_pass_bqsr.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\tfail\tsecond_pass_bqsr.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tsecond_pass_bqsr.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi
 
-echo -e "$(date)\tbegin\tsecond_pass_bqsr.sh-analyze\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tsecond_pass_bqsr.sh-analyze\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
 java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
 -T AnalyzeCovariates \
@@ -71,8 +71,8 @@ java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
 -plots $CWD/$SM/metrics/$SM.recalibration_plots.pdf
 
 if [[ -s $CWD/$SM/metrics/$SM.recalibration_plots.pdf ]]; then
-    echo -e "$(date)\tend\tsecond_pass_bqsr.sh-analyze\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tend\tsecond_pass_bqsr.sh-analyze\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\tfail\tsecond_pass_bqsr.sh-analyze\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tsecond_pass_bqsr.sh-analyze\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi
