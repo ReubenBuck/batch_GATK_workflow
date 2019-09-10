@@ -42,7 +42,7 @@ fi
 echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tfirst_pass_bqsr.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
 #ADD exome filter
-if [[ ! -z EXOME ]]; then
+if [[ ! -z $EXOME ]]; then
     INTERVALS=$(echo -e "$CWD/$SM/tmp/$SM.bqsr.train.bed -L $EXOME --interval-set-rule INTERSECTION --interval_padding 100")
 else 
     INTERVALS=$(echo -e "$CWD/$SM/tmp/$SM.bqsr.train.bed")
