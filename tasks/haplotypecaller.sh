@@ -58,12 +58,16 @@ fi
 echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\thaplotypecaller.sh\t$SM\t${TARGET%\.intervals}" &>> $CWD/$SM/log/$SM.run.log
 
 
+if [[ ! -z EXOME ]]; then
+    DOEXOME=$(echo -e "-L $EXOME --interval-set-rule INTERSECTION --interval_padding 100")
+fi
+
 java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \
 -nct $THREADS \
 -ERC GVCF \
 -T HaplotypeCaller \
 -R $REF \
--L ${REF%/*}/target_loci/$TARGET \
+-L ${REF%/*}/target_loci/$TARGET $DOEXOME \
 -I $CWD/$SM/bam/$SM.${TARGET%\.intervals}.$inStatus.bam \
 -o $CWD/$SM/gvcf/$SM.${TARGET%\.intervals}.g.vcf.gz
 

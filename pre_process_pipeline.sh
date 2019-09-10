@@ -57,6 +57,9 @@ shift; PARTITION=$1
 -e | --email )
 shift; EMAIL=$1
 ;;
+-E | --exomes )
+shift; EXOME=$1
+;;
 -T | --taskdir )
 shift; TASKDIR=$1
 ;;
@@ -305,7 +308,7 @@ sbatch \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/cat_sort_index_bams-${SM}-%j.out \
 $TASKDIR/cat_sort_index_bams.sh --sample $SM \
 --ref $REF --workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads ${cat_sort_index_bamsNTASKS} \
---bqsr $BQSR --memrequest $cat_sort_index_bamsMEM
+--bqsr $BQSR --memrequest $cat_sort_index_bamsMEM --rversion $RMOD --picard $PICARD
 
 
 haplotypecallerMEM=$(cat $MACHINE | grep haplotypecaller | cut -f 2)

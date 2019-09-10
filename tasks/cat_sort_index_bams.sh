@@ -6,6 +6,12 @@ shift; SM=$1
 --samtools )
 shift; SAMTOOLSMOD=$1
 ;;
+--picard )
+shift; PICARD=$1
+;;
+--rversion )
+shift; RMOD=$1
+;;
 --ref )
 shift; REF=$1
 ;;
@@ -28,7 +34,7 @@ esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
 module load $SAMTOOLSMOD
-
+module load $RMOD
 
 if [[ $BQSR = true ]]; then
     inStatus=recal
@@ -95,7 +101,7 @@ O=$CWD/$SM/metrics/$SM.multiple_metrics \
 R=$REF
 
 
-if [[ -s $CWD/$SM/bam/$SM.$inStatus.bam.bai ]]; then
+if [[ -s $CWD/$SM/metrics/$SM.multiple_metrics.alignment_summary_metrics ]]; then
     echo -e "$(date)\t${SLURM_JOB_ID}\tend\tcat_sort_index_bams.sh-metrics\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 else
     echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tcat_sort_index_bams.sh-metrics\t$SM\t" &>> $CWD/$SM/log/$SM.run.log

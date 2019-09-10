@@ -45,12 +45,18 @@ fi
 
 echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tsecond_pass_bqsr.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
+
+if [[ ! -z EXOME ]]; then
+    DOEXOME=$(echo -e "-L $EXOME --interval-set-rule INTERSECTION --interval_padding 100")
+fi
+
+
 java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \
 -nct $THREADS \
 -T BaseRecalibrator \
 -R $REF \
 -I $CWD/$SM/tmp/$SM.bams.list \
--L $CWD/$SM/tmp/$SM.bqsr.test.bed \
+-L $CWD/$SM/tmp/$SM.bqsr.test.bed $DOEXOME \
 -XL $CWD/$SM/tmp/$SM.gaps.bed \
 -knownSites $RECAL \
 -o $CWD/$SM/metrics/$SM.post_recal_data.table \
