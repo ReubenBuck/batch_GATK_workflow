@@ -46,8 +46,10 @@ echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tfirst_pass_bqsr.sh\t$SM\t" &>> $CWD/$S
 
 #ADD exome filter
 if [[ ! -z $EXOME ]]; then
-    DOEXOME=$(echo -e "$CWD/$SM/tmp/$SM.bqsr.train.bed -L $EXOME --interval-set-rule INTERSECTION --interval_padding 100")
+    DOEXOME=$(echo -e "-L $EXOME --interval-set-rule INTERSECTION --interval_padding 100")
 fi
+
+echo $DOEXOME
 
 # make a list of bams to pass to BQSR
 LOCI=$(echo $(ls ${REF%/*}/target_loci) |  sed 's/.intervals//g' | sed 's/ /,/g')

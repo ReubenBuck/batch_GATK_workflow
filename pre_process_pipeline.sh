@@ -101,6 +101,9 @@ if [[ ! -z $EXOME ]]; then
 	EXOME=$(echo "--exome $EXOME")	
 fi
 
+lociLen=$(ls ${REF%/*}/target_loci | wc -l)
+LOCI=$(echo $(ls ${REF%/*}/target_loci) |  sed 's/ /,/g')
+
 # need to check for partitions
 # and account and email
 
@@ -223,8 +226,6 @@ fi
 # --threads ${realigner_target_creatorNTASKS} --memrequest ${realigner_target_creatorMEM}
 
 # indel realignment 
-lociLen=$(ls ${REF%/*}/target_loci | wc -l)
-LOCI=$(echo $(ls ${REF%/*}/target_loci) |  sed 's/ /,/g')
 
 
 # indel_realignerMEM=$(cat $MACHINE | grep indel_realigner | cut -f 2)
