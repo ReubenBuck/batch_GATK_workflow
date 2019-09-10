@@ -375,8 +375,9 @@ echo -e "\n\n$(date)\nFinal destination checks complete.....\n\n\n\n" &>> $CWD/$
 
 echo -e "\n\n$(date)\nPrepare reference intervals" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
 
-Rscript $TASKDIR/process_ref $REF > $CWD/$SM/tmp/$SM.gaps.bed
+Rscript $TASKDIR/process_ref.R $REF > $CWD/$SM/tmp/$SM.gaps.bed
 cut -f1,2 $REF.fai > $CWD/$SM/tmp/$SM.bedtools.genome
+cut -f1 $REF.fai > $CWD/$SM/tmp/$SM.names.txt
 awk '{print $1"\t"0"\t"$2}' $CWD/$SM/tmp/$SM.bedtools.genome > $CWD/$SM/tmp/$SM.genome.bed
 # subtract
 paste $CWD/$SM/tmp/$SM.gaps.bed <(cat $CWD/$SM/tmp/$SM.gaps.bed | 
@@ -384,19 +385,43 @@ paste $CWD/$SM/tmp/$SM.gaps.bed <(cat $CWD/$SM/tmp/$SM.gaps.bed |
 
 bedtools subtract -a $CWD/$SM/tmp/$SM.genome.bed -b $CWD/$SM/tmp/$SM.large.gaps.bed > $CWD/$SM/tmp/$SM.split.bed
 
+if [[ -s $CWD/$SM/tmp/$SM.gaps.bed && -s $CWD/$SM/tmp/$SM.genome.bed && -s $CWD/$SM/tmp/$SM.large.gaps.bed && -s $CWD/$SM/tmp/$SM.split.bed ]]; then
+    echo -e "$(date)\nRef and gap bed files exist"
+else
+    echo -e "$(date)\nRef and gap bed files not found, exiting"
+    scancel $SM
+fi
+
+
+# create interval lists by spliting the genome at gaps
 mkdir -p $CWD/$SM/tmp/split_range
 bedtools split -i $CWD/$SM/tmp/$SM.split.bed -n 100 -p $CWD/$SM/tmp/split_range/$SM
-# at 15 n, we get similar file sizes, is this optimal?
+for i in $(ls $CWD/$SM/tmp/split_range/$SM*.bed); do
+    bedtools sort -fai $CWD/$SM/tmp/$SM.names.txt $i > $CWD/$SM/tmp/split_range/tmp.bed
+    mv $CWD/$SM/tmp/split_range/tmp.bed $CWD/$SM/tmp/split_range/$i
+done
+rm $CWD/$SM/tmp/split_range/tmp.bed
 
-# do these need to processed in any other way, eg. sort
+if [[ -s $CWD/$SM/tmp/split_range/$SM.00001.bed ]]; then
+    echo -e "$(date)\nSplit range found"
+else
+    echo -e "$(date)\nFirst split range not found, exiting"
+    scancel $SM
+fi
+
 
 # bqsr train
 bedtools random -n 100 -l 1000000 -g $CWD/$SM/tmp/$SM.bedtools.genome | cut -f1-3 | bedtools sort > $CWD/$SM/tmp/$SM.bqsr.train.bed
 # bqsr test
-bedtools random -n 100 -l 1000000 -g $CWD/$SM/tmp/$SM.bedtools.genome | cut -f1-3 | bedtools sort > $CWD/$SM/tmp/$SM.bqsr.train.bed
+bedtools random -n 100 -l 1000000 -g $CWD/$SM/tmp/$SM.bedtools.genome | cut -f1-3 | bedtools sort > $CWD/$SM/tmp/$SM.bqsr.test.bed
 
+if [[ -s $CWD/$SM/tmp/$SM.bqsr.train.bed && -s $CWD/$SM/tmp/$SM.bqsr.test.bed ]]; then
+    echo -e "$(date)\nTrain and test intervals for bqsr exist"
+else
+    echo -e "$(date)\nTrain and test intervals not found, exiting"
+    scancel $SM
+fi
 
-# for scatter gather we could use a split function to reduce the number of files we have to deal with
 
 
 echo -e "\n\n$(date)\nFile and program checks complete, moving on...\n\n\n\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
