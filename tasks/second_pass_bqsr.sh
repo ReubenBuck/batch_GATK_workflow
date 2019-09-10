@@ -50,6 +50,8 @@ java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \
 -T BaseRecalibrator \
 -R $REF \
 -I $CWD/$SM/tmp/$SM.bams.list \
+-L $CWD/$SM/tmp/$SM.bqsr.test.bed \
+-XL $CWD/$SM/tmp/$SM.gaps.bed \
 -knownSites $RECAL \
 -o $CWD/$SM/metrics/$SM.post_recal_data.table \
 -BQSR $CWD/$SM/metrics/$SM.recal_data.table

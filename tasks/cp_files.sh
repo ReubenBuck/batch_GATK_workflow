@@ -31,6 +31,23 @@ elif [[ $BQSR = false ]]; then
     inStatus=realign
 fi
 
+# collect and colate efficiency metrics
+IDS=$(cat $CWD/$SM/log/$SM.run.log | cut -f2 | sort | uniq)
+
+for i in $IDS; do 
+JOBNAME=$(grep $i $CWD/$SM/log/$SM.run.log | cut -f 4 | sed "s/.sh-.*$/.sh/g" | uniq | head -n1)
+echo -e "$i\tJob name\t$JOBNAME" &>> $CWD/$SM/metrics/$SM.eff.tsv
+seff $i | sed "s/: /\t/g" > $CWD/$SM/tmp/jobspec.txt
+LINES=$(wc -l $CWD/$SM/tmp/jobspec.txt | cut -f1 -d" ")
+printf "$i%.0s\n" $(seq 1 $LINES) > $CWD/$SM/tmp/jobid.txt
+paste $CWD/$SM/tmp/jobid.txt $CWD/$SM/tmp/jobspec.txt &>> $CWD/$SM/metrics/$SM.eff.tsv
+done
+
+
+
+
+
+
 
 echo -e "$(date)\tbegin\tcp_files.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 

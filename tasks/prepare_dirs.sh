@@ -83,20 +83,25 @@ shift; BWAMOD=$1
 --java )
 shift; JAVAMOD=$1
 ;;
+--rversion )
+shift; RMOD=$1
+;;
+--bedtools )
+shift; BEDTOOLSMOD=$1
+;;
 --perform )
 shift; PERFORM=$1
 ;;
 --bqsr )
 shift; BQSR=$1
 ;;
+--taskdir )
+shift; TASKDIR=$1
+;;
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
-mkdir -p $CWD/$SM/fastq
-mkdir -p $CWD/$SM/bam
-mkdir -p $CWD/$SM/metrics
-mkdir -p $CWD/$SM/gvcf
-mkdir -p $CWD/$SM/tmp
+
 
 #clean and establish the working dir
 if [[ ! -z $(ls $CWD/$SM/) ]]; then
@@ -147,6 +152,28 @@ module load $SAMTOOLSMOD
 module load $FASTQCMOD
 module load $PIGZMOD
 module load $BWAMOD
+module load $RMOD
+module load $BEDTOOLSMOD
+
+Rscript --version; Rexit=$?
+if [[ $Rexit = 0 ]]; then
+    echo -e "$(date)\nUsing R version:" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
+    Rscript --version &>> $CWD/$SM/log/prepare_dirs-${SM}.out
+    echo -e "\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
+else
+    echo -e "$(date)\nR did not exit with 0 status, exiting" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
+    scancel -n $SM
+fi
+
+bedtools --version; Bedexit=$?
+if [[ $Bedexit = 0 ]]; then
+    echo -e "$(date)\nUsing bedtools version:" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
+    bedtools --version &>> $CWD/$SM/log/prepare_dirs-${SM}.out
+    echo -e "\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
+else
+    echo -e "$(date)\nbedtools did not exit with 0 status, exiting" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
+    scancel -n $SM
+fi
 
 
 java -version; javExit=$?
@@ -345,6 +372,32 @@ else
 fi
 
 echo -e "\n\n$(date)\nFinal destination checks complete.....\n\n\n\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
+
+echo -e "\n\n$(date)\nPrepare reference intervals" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
+
+Rscript $TASKDIR/process_ref $REF > $CWD/$SM/tmp/$SM.gaps.bed
+cut -f1,2 $REF.fai > $CWD/$SM/tmp/$SM.bedtools.genome
+awk '{print $1"\t"0"\t"$2}' $CWD/$SM/tmp/$SM.bedtools.genome > $CWD/$SM/tmp/$SM.genome.bed
+# subtract
+paste $CWD/$SM/tmp/$SM.gaps.bed <(cat $CWD/$SM/tmp/$SM.gaps.bed | 
+    awk -F'\t' '{print $3-$2 }') | awk '$4>=100' | cut -f1-3 > $CWD/$SM/tmp/$SM.large.gaps.bed
+
+bedtools subtract -a $CWD/$SM/tmp/$SM.genome.bed -b $CWD/$SM/tmp/$SM.large.gaps.bed > $CWD/$SM/tmp/$SM.split.bed
+
+mkdir -p $CWD/$SM/tmp/split_range
+bedtools split -i $CWD/$SM/tmp/$SM.split.bed -n 100 -p $CWD/$SM/tmp/split_range/$SM
+# at 15 n, we get similar file sizes, is this optimal?
+
+# do these need to processed in any other way, eg. sort
+
+# bqsr train
+bedtools random -n 100 -l 1000000 -g $CWD/$SM/tmp/$SM.bedtools.genome | cut -f1-3 | bedtools sort > $CWD/$SM/tmp/$SM.bqsr.train.bed
+# bqsr test
+bedtools random -n 100 -l 1000000 -g $CWD/$SM/tmp/$SM.bedtools.genome | cut -f1-3 | bedtools sort > $CWD/$SM/tmp/$SM.bqsr.train.bed
+
+
+# for scatter gather we could use a split function to reduce the number of files we have to deal with
+
 
 echo -e "\n\n$(date)\nFile and program checks complete, moving on...\n\n\n\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
 

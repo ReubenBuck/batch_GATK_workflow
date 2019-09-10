@@ -11,6 +11,7 @@ PIGZMOD=pigz/pigz-2.4
 FASTQCMOD=fastqc/fastqc-0.11.7
 BWAMOD=bwa/bwa-0.7.17
 RMOD=R/R-3.3.3
+BEDTOOLSMOD=bedtools/bedtools-2.26.0
 
 # need to read in the config file! 
 while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
@@ -77,6 +78,9 @@ shift; FASTQCMOD=$1
 -b | --bwa )
 shift; BWAMOD=$1
 ;;
+-B | --bedtools )
+shift; BEDTOOLSMOD=$1
+;;
 -r | --rversion )
 shift; RMOD=$1
 ;;
@@ -108,8 +112,8 @@ $TASKDIR/prepare_dirs.sh --sample $SM \
 --gvcf $GVCF --metrics $METRICS --log $LOG \
 --bwa $BWAMOD --fastqc $FASTQCMOD --pigz $PIGZMOD --java $JAVAMOD \
 --samtools $SAMTOOLSMOD --gatk $GATK --picard $PICARD \
---runLen $runLen --perform $PERFORM --bqsr $BQSR \
-
+--runLen $runLen --perform $PERFORM --bqsr $BQSR --taskdir $TASKDIR \
+--rversion $RMOD --bedtools $BEDTOOLSMOD
 
 prepare_readsMEM=$(cat $MACHINE | grep prepare_reads | cut -f 2)
 prepare_readsTIME=$(cat $MACHINE | grep prepare_reads | cut -f 3)
@@ -136,7 +140,7 @@ sbatch \
 --mem=${map_readsMEM}G --time=${map_readsTIME} --nodes=1 --ntasks=${map_readsNTASKS} \
 --array=1-$runLen --job-name=$SM --account=$ACCOUNT \
 --partition=$PARTITION $EXCLUSIVE -d singleton \
---mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/map_reads-${SM}-${TASKS}-%A-%a-%j.out \
+--mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/map_reads-${SM}-%A-%a-%j.out \
 $TASKDIR/map_reads.sh --sample $SM \
 --read1 $R1 --read2 $R2 --threads ${map_readsNTASKS} \
 --workdir $CWD --bwa $BWAMOD --samtools $SAMTOOLSMOD --perform $PERFORM \
