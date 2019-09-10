@@ -46,7 +46,7 @@ echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tfirst_pass_bqsr.sh\t$SM\t" &>> $CWD/$S
 
 #ADD exome filter
 if [[ ! -z $EXOME ]]; then
-    DOEXOME=$(echo -e "-L $EXOME --interval-set-rule=INTERSECTION --interval_padding 100")
+    DOEXOME=$(echo -e "-L $EXOME -isr INTERSECTION -ip 100")
 fi
 
 echo $DOEXOME
