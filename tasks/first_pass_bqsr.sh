@@ -43,9 +43,9 @@ echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tfirst_pass_bqsr.sh\t$SM\t" &>> $CWD/$S
 
 #ADD exome filter
 if [[ ! -z EXOME ]]; then
-    DOEXOME=$(echo -e "-L $EXOME --interval-set-rule INTERSECTION --interval_padding 100")
+    INTERVALS=$(echo -e "$CWD/$SM/tmp/$SM.bqsr.train.bed -L $EXOME --interval-set-rule INTERSECTION --interval_padding 100")
 else 
-    DOEXOME=""
+    INTERVALS=$(echo -e "$CWD/$SM/tmp/$SM.bqsr.train.bed")
 fi
 
 
@@ -59,7 +59,7 @@ java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \
 	-T BaseRecalibrator \
 	-R $REF \
 	-I $CWD/$SM/tmp/$SM.bams.list \
-    -L $CWD/$SM/tmp/$SM.bqsr.train.bed $DOEXOME\
+    -L $INTERVALS \
     -XL $CWD/$SM/tmp/$SM.gaps.bed \
 	-knownSites $RECAL \
 	-o $CWD/$SM/metrics/$SM.recal_data.table \
