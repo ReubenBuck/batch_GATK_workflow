@@ -48,6 +48,7 @@ else
     INTERVALS=$(echo -e "$CWD/$SM/tmp/$SM.bqsr.train.bed")
 fi
 
+echo $EXOME
 echo $INTERVALS
 
 # make a list of bams to pass to BQSR
