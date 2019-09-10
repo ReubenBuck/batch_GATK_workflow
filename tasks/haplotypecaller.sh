@@ -58,7 +58,7 @@ fi
 echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\thaplotypecaller.sh\t$SM\t${TARGET%\.intervals}" &>> $CWD/$SM/log/$SM.run.log
 
 
-if [[ ! -z EXOME ]]; then
+if [[ ! -z $EXOME ]]; then
     DOEXOME=$(echo -e "-L $EXOME --interval-set-rule INTERSECTION --interval_padding 100")
 fi
 

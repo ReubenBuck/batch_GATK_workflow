@@ -46,7 +46,7 @@ fi
 echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tsecond_pass_bqsr.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
 
-if [[ ! -z EXOME ]]; then
+if [[ ! -z $EXOME ]]; then
     DOEXOME=$(echo -e "-L $EXOME --interval-set-rule INTERSECTION --interval_padding 100")
 fi
 

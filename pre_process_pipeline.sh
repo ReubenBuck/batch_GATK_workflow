@@ -97,6 +97,10 @@ elif [[ $PERFORM = false ]]; then
 	EXCLUSIVE=""
 fi
 
+if [[ ! -z $EXOME ]]; then
+	EXOME=$(echo "--exome $EXOME")	
+fi
+
 # need to check for partitions
 # and account and email
 
@@ -252,7 +256,7 @@ BQSRID=$(sbatch \
 $TASKDIR/first_pass_bqsr.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --recal $RECAL --ref $REF \
 --perform $PERFORM --threads ${first_pass_bqsrNTASKS} \
---memrequest ${first_pass_bqsrMEM} | cut -f 4 -d ' ')
+--memrequest ${first_pass_bqsrMEM} $EXOME | cut -f 4 -d ' ')
 
 echo $BQSRID
 

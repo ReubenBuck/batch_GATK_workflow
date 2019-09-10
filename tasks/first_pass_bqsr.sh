@@ -27,6 +27,9 @@ shift; CWD=$1
 --memrequest )
 shift; MEM=$1
 ;;
+--exome )
+shift; EXOME=$1
+;;
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
@@ -43,13 +46,8 @@ echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tfirst_pass_bqsr.sh\t$SM\t" &>> $CWD/$S
 
 #ADD exome filter
 if [[ ! -z $EXOME ]]; then
-    INTERVALS=$(echo -e "$CWD/$SM/tmp/$SM.bqsr.train.bed -L $EXOME --interval-set-rule INTERSECTION --interval_padding 100")
-#else 
- #   INTERVALS=$(echo -e "$CWD/$SM/tmp/$SM.bqsr.train.bed")
+    DOEXOME=$(echo -e "$CWD/$SM/tmp/$SM.bqsr.train.bed -L $EXOME --interval-set-rule INTERSECTION --interval_padding 100")
 fi
-
-echo $EXOME
-echo $INTERVALS
 
 # make a list of bams to pass to BQSR
 LOCI=$(echo $(ls ${REF%/*}/target_loci) |  sed 's/.intervals//g' | sed 's/ /,/g')
@@ -61,7 +59,7 @@ java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \
 	-T BaseRecalibrator \
 	-R $REF \
 	-I $CWD/$SM/tmp/$SM.bams.list \
-    -L $CWD/$SM/tmp/$SM.bqsr.train.bed $INTERVALS \
+    -L $CWD/$SM/tmp/$SM.bqsr.train.bed $DOEXOME \
     -XL $CWD/$SM/tmp/$SM.gaps.bed \
 	-knownSites $RECAL \
 	-o $CWD/$SM/metrics/$SM.recal_data.table \
