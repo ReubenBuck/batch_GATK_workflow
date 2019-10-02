@@ -46,7 +46,9 @@ echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tfirst_pass_bqsr.sh\t$SM\t" &>> $CWD/$S
 
 #ADD exome filter
 if [[ ! -z $EXOME ]]; then
-    DOEXOME=$(echo -e "-L $EXOME -isr INTERSECTION -ip 100")
+    DOEXOME=$(echo -e "$EXOME -ip 100")
+else
+    DOEXOME=$(echo -e "$CWD/$SM/tmp/$SM.bqsr.train.bed")
 fi
 
 echo $DOEXOME
@@ -61,7 +63,7 @@ java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \
 	-T BaseRecalibrator \
 	-R $REF \
 	-I $CWD/$SM/tmp/$SM.bams.list \
-    -L $CWD/$SM/tmp/$SM.bqsr.train.bed $DOEXOME \
+    -L $DOEXOME \
     -XL $CWD/$SM/tmp/$SM.gaps.bed \
 	-knownSites $RECAL \
 	-o $CWD/$SM/metrics/$SM.recal_data.table \

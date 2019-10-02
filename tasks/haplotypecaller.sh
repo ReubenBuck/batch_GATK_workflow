@@ -31,6 +31,9 @@ shift; CWD=$1
 --memrequest )
 shift; MEM=$1
 ;;
+--exome )
+shift; EXOME=$1
+;;
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
@@ -59,7 +62,7 @@ echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\thaplotypecaller.sh\t$SM\t${TARGET%\.in
 
 
 if [[ ! -z $EXOME ]]; then
-    DOEXOME=$(echo -e "-L $EXOME --interval-set-rule INTERSECTION --interval_padding 100")
+    DOEXOME=$(echo -e "-L $EXOME --isr INTERSECTION -ip 100")
 fi
 
 java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \

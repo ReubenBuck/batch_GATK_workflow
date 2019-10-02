@@ -30,6 +30,9 @@ shift; CWD=$1
 --memrequest )
 shift; MEM=$1
 ;;
+--exome )
+shift; EXOME=$1
+;;
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
@@ -47,7 +50,9 @@ echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tsecond_pass_bqsr.sh\t$SM\t" &>> $CWD/$
 
 
 if [[ ! -z $EXOME ]]; then
-    DOEXOME=$(echo -e "-L $EXOME --interval-set-rule INTERSECTION --interval_padding 100")
+    DOEXOME=$(echo -e "$EXOME -ip 100")
+else
+    DOEXOME=$(echo -e "$CWD/$SM/tmp/$SM.bqsr.test.bed")
 fi
 
 
@@ -56,7 +61,7 @@ java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \
 -T BaseRecalibrator \
 -R $REF \
 -I $CWD/$SM/tmp/$SM.bams.list \
--L $CWD/$SM/tmp/$SM.bqsr.test.bed $DOEXOME \
+-L $DOEXOME \
 -XL $CWD/$SM/tmp/$SM.gaps.bed \
 -knownSites $RECAL \
 -o $CWD/$SM/metrics/$SM.post_recal_data.table \

@@ -289,7 +289,7 @@ SECONDBQSRID=$(sbatch \
 $TASKDIR/second_pass_bqsr.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --recal $RECAL --ref $REF \
 --perform $PERFORM --threads ${second_pass_bqsrNTASKS} \
- --rversion $RMOD --memrequest ${second_pass_bqsrMEM} | cut -f 4 -d ' ')
+ --rversion $RMOD --memrequest ${second_pass_bqsrMEM} $EXOME | cut -f 4 -d ' ')
 
 echo $SECONDBQSRID
 
@@ -327,7 +327,7 @@ sbatch \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/haplotypecaller-${SM}-%A-%a-%j.out \
 $TASKDIR/haplotypecaller.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --loci $LOCI --bqsr $BQSR \
---perform $PERFORM --threads ${haplotypecallerNTASKS} --memrequest ${haplotypecallerMEM}
+--perform $PERFORM --threads ${haplotypecallerNTASKS} --memrequest ${haplotypecallerMEM} $EXOME
 
 
 cat_gvcfMEM=$(cat $MACHINE | grep cat_gvcf | cut -f 2)

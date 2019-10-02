@@ -411,9 +411,9 @@ fi
 
 
 # bqsr train
-bedtools random -n 100 -l 1000000 -g $CWD/$SM/tmp/$SM.bedtools.genome | cut -f1-3 | bedtools sort > $CWD/$SM/tmp/$SM.bqsr.train.bed
+bedtools random -seed 1 -n 100 -l 1000000 -g $CWD/$SM/tmp/$SM.bedtools.genome | cut -f1-3 | bedtools sort > $CWD/$SM/tmp/$SM.bqsr.train.bed
 # bqsr test
-bedtools random -n 100 -l 1000000 -g $CWD/$SM/tmp/$SM.bedtools.genome | cut -f1-3 | bedtools sort > $CWD/$SM/tmp/$SM.bqsr.test.bed
+bedtools random -seed 2 -n 100 -l 1000000 -g $CWD/$SM/tmp/$SM.bedtools.genome | cut -f1-3 | bedtools sort > $CWD/$SM/tmp/$SM.bqsr.test.bed
 
 if [[ -s $CWD/$SM/tmp/$SM.bqsr.train.bed && -s $CWD/$SM/tmp/$SM.bqsr.test.bed ]]; then
     echo -e "$(date)\nTrain and test intervals for bqsr exist"
