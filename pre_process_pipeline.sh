@@ -2,6 +2,8 @@
 # set defults for unused options
 BQSR=false
 PERFORM=false
+GAPSIZE=100
+ARRAYLEN=10
 
 SAMTOOLSMOD=samtools/samtools-1.9
 GATK=/cluster/software/gatk/gatk-3.8/GenomeAnalysisTK.jar
@@ -20,6 +22,9 @@ exit
 ;;
 -a | --account )
 shift; ACCOUNT=$1
+;;
+-A | --array-len )
+shift; ARRAYLEN=$1 # An interger value of how to break up the analysis
 ;;
 -b | --bam )
 shift; BAM=$1
@@ -48,6 +53,9 @@ shift; EXOME=$1
 ;;
 -g | --gvcf )
 shift; GVCF=$1
+;;
+-G | --gap-size )
+shift; GAPSIZE=$1 # for setting the size of gaps where it is ok to break the genome
 ;;
 -l | --log )
 shift; LOG=$1
@@ -109,7 +117,11 @@ if [[ ! -z $EXOME ]]; then
 	EXOME=$(echo "--exome $EXOME")	
 fi
 
+# has been replaced by array len
 lociLen=$(ls ${REF%/*}/target_loci | wc -l)
+
+# this one is read in as a unix array to the programs
+# this will need to be integrated with the split read stuff
 LOCI=$(echo $(ls ${REF%/*}/target_loci) |  sed 's/ /,/g')
 
 # need to check for partitions
@@ -131,7 +143,7 @@ $TASKDIR/prepare_dirs.sh --sample $SM \
 --bwa $BWAMOD --pigz $PIGZMOD --java $JAVAMOD \
 --samtools $SAMTOOLSMOD --gatk $GATK --picard $PICARD \
 --runLen $runLen --perform $PERFORM --bqsr $BQSR --taskdir $TASKDIR \
---rversion $RMOD --bedtools $BEDTOOLSMOD
+--rversion $RMOD --bedtools $BEDTOOLSMOD --array-len $ARRAYLEN --gap-size $GAPSIZE
 
 prepare_readsMEM=$(cat $MACHINE | grep prepare_reads | cut -f 2)
 prepare_readsTIME=$(cat $MACHINE | grep prepare_reads | cut -f 3)
@@ -242,7 +254,7 @@ indel_realignerNTASKS=$(cat $MACHINE | grep indel_realigner | cut -f 4)
 # needs a job id for cat_sort_index_bams.sh
 CATBAMID=$(sbatch \
 --mem=${indel_realignerMEM}G --time=${indel_realignerTIME} --nodes=1 --ntasks=${indel_realignerNTASKS} \
---array=1-$lociLen \
+--array=1-$ARRAYLEN \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/indel_realigner-${TASKS}-%A-%a-%j.out \
 $TASKDIR/indel_realigner.sh --sample $SM \
@@ -277,7 +289,7 @@ print_readsNTASKS=$(cat $MACHINE | grep print_reads | cut -f 4)
 # needs a job id for cat_sort_index_bams.sh
 CATBAMID=$(sbatch \
 --mem=${print_readsMEM}G --time=${print_readsTIME} --nodes=1 --ntasks=${print_readsNTASKS} \
---array=1-$lociLen \
+--array=1-$ARRAYLEN \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/print_reads-${SM}-%A-%a-%j.out \
 $TASKDIR/print_reads.sh --sample $SM \
@@ -330,7 +342,7 @@ haplotypecallerNTASKS=$(cat $MACHINE | grep haplotypecaller | cut -f 4)
 # haplotype caller
 sbatch \
 --mem=${haplotypecallerMEM}G --time=${haplotypecallerTIME} --ntasks=${haplotypecallerNTASKS} \
--d singleton --array 1-$lociLen --nodes=1 \
+-d singleton --array 1-$ARRAYLEN --nodes=1 \
 --job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/haplotypecaller-${SM}-%A-%a-%j.out \
 $TASKDIR/haplotypecaller.sh --sample $SM \

@@ -98,6 +98,12 @@ shift; BQSR=$1
 --taskdir )
 shift; TASKDIR=$1
 ;;
+--array-len )
+shift; ARRAYLEN=$1
+;;
+--gap-size )
+shift; GAPSIZE=$1
+;;
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
@@ -375,14 +381,19 @@ echo -e "\n\n$(date)\nFinal destination checks complete.....\n\n\n\n" &>> $CWD/$
 
 echo -e "\n\n$(date)\nPrepare reference intervals" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
 
+# extract gaps from reference index files
 Rscript $TASKDIR/process_ref.R $REF > $CWD/$SM/tmp/$SM.gaps.bed
+# get chr sizes for bedtools genome file
 cut -f1,2 $REF.fai > $CWD/$SM/tmp/$SM.bedtools.genome
+# get order of chr names from fai file
 cut -f1 $REF.fai > $CWD/$SM/tmp/$SM.names.txt
+# create bed file of entire chr lengths
 awk '{print $1"\t"0"\t"$2}' $CWD/$SM/tmp/$SM.bedtools.genome > $CWD/$SM/tmp/$SM.genome.bed
-# subtract
+# pull out large gap intervals for splitting genome
 paste $CWD/$SM/tmp/$SM.gaps.bed <(cat $CWD/$SM/tmp/$SM.gaps.bed | 
-    awk -F'\t' '{print $3-$2 }') | awk '$4>=100' | cut -f1-3 > $CWD/$SM/tmp/$SM.large.gaps.bed
+    awk -F'\t' '{print $3-$2 }') | awk -v gapsize=$GAPSIZE '$4>=gapsize' | cut -f1-3 > $CWD/$SM/tmp/$SM.large.gaps.bed
 
+# supbtract from genome bed to get list of regions bed
 bedtools subtract -a $CWD/$SM/tmp/$SM.genome.bed -b $CWD/$SM/tmp/$SM.large.gaps.bed > $CWD/$SM/tmp/$SM.split.bed
 
 if [[ -s $CWD/$SM/tmp/$SM.gaps.bed && -s $CWD/$SM/tmp/$SM.genome.bed && -s $CWD/$SM/tmp/$SM.large.gaps.bed && -s $CWD/$SM/tmp/$SM.split.bed ]]; then
@@ -393,12 +404,12 @@ else
 fi
 
 
-# create interval lists by spliting the genome at gaps
+# use region list to split loci into similar sized chunks and sort
 mkdir -p $CWD/$SM/tmp/split_range
-bedtools split -i $CWD/$SM/tmp/$SM.split.bed -n 100 -p $CWD/$SM/tmp/split_range/$SM
+bedtools split -i $CWD/$SM/tmp/$SM.split.bed -n $ARRAYLEN -p $CWD/$SM/tmp/split_range/$SM
 for i in $(ls $CWD/$SM/tmp/split_range/$SM*.bed); do
-    bedtools sort -fai $CWD/$SM/tmp/$SM.names.txt $i > $CWD/$SM/tmp/split_range/tmp.bed
-    mv $CWD/$SM/tmp/split_range/tmp.bed $CWD/$SM/tmp/split_range/$i
+    bedtools sort -faidx $CWD/$SM/tmp/$SM.names.txt -i $i > $CWD/$SM/tmp/split_range/tmp.bed
+    mv $CWD/$SM/tmp/split_range/tmp.bed $i
 done
 rm $CWD/$SM/tmp/split_range/tmp.bed
 
@@ -409,11 +420,12 @@ else
     scancel $SM
 fi
 
-
+# get bqsr regions for training and testing
+# should speed up analysis by getting a good representation of error profiles
 # bqsr train
-bedtools random -seed 1 -n 100 -l 1000000 -g $CWD/$SM/tmp/$SM.bedtools.genome | cut -f1-3 | bedtools sort > $CWD/$SM/tmp/$SM.bqsr.train.bed
+bedtools random -seed 1 -n 100 -l 1000000 -g $CWD/$SM/tmp/$SM.bedtools.genome | cut -f1-3 | bedtools sort -faidx $CWD/$SM/tmp/$SM.names.txt > $CWD/$SM/tmp/$SM.bqsr.train.bed
 # bqsr test
-bedtools random -seed 2 -n 100 -l 1000000 -g $CWD/$SM/tmp/$SM.bedtools.genome | cut -f1-3 | bedtools sort > $CWD/$SM/tmp/$SM.bqsr.test.bed
+bedtools random -seed 2 -n 100 -l 1000000 -g $CWD/$SM/tmp/$SM.bedtools.genome | cut -f1-3 | bedtools sort -faidx $CWD/$SM/tmp/$SM.names.txt > $CWD/$SM/tmp/$SM.bqsr.test.bed
 
 if [[ -s $CWD/$SM/tmp/$SM.bqsr.train.bed && -s $CWD/$SM/tmp/$SM.bqsr.test.bed ]]; then
     echo -e "$(date)\nTrain and test intervals for bqsr exist"
