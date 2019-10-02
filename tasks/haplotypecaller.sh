@@ -62,7 +62,7 @@ echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\thaplotypecaller.sh\t$SM\t${TARGET%\.in
 
 
 if [[ ! -z $EXOME ]]; then
-    DOEXOME=$(echo -e "-L $EXOME --isr INTERSECTION -ip 100")
+    DOEXOME=$(echo -e "-L $EXOME -isr INTERSECTION -ip 100")
 fi
 
 java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \

@@ -241,79 +241,79 @@ LOCI=$(echo $(ls ${REF%/*}/target_loci) |  sed 's/ /,/g')
 # --workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM --loci $LOCI \
 # --memrequest ${indel_realignerMEM} | cut -f 4 -d ' ')
 
-echo $CATBAMID yes
+# echo $CATBAMID yes
 
-if [[ $BQSR = true ]]; then
-CATBAMID=""
+# if [[ $BQSR = true ]]; then
+# CATBAMID=""
 
-first_pass_bqsrMEM=$(cat $MACHINE | grep first_pass_bqsr | cut -f 2)
-first_pass_bqsrTIME=$(cat $MACHINE | grep first_pass_bqsr | cut -f 3)
-first_pass_bqsrNTASKS=$(cat $MACHINE | grep first_pass_bqsr | cut -f 4)
-#first_pass_bqsr.s
-BQSRID=$(sbatch \
---mem=${first_pass_bqsrMEM}G --time=${first_pass_bqsrTIME} --nodes=1 --ntasks=${first_pass_bqsrNTASKS} \
---job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
---mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/first_pass_bqsr-${SM}-%j.out \
-$TASKDIR/first_pass_bqsr.sh --sample $SM \
---workdir $CWD --gatk $GATK --java $JAVAMOD --recal $RECAL --ref $REF \
---perform $PERFORM --threads ${first_pass_bqsrNTASKS} \
---memrequest ${first_pass_bqsrMEM} $EXOME | cut -f 4 -d ' ')
+# first_pass_bqsrMEM=$(cat $MACHINE | grep first_pass_bqsr | cut -f 2)
+# first_pass_bqsrTIME=$(cat $MACHINE | grep first_pass_bqsr | cut -f 3)
+# first_pass_bqsrNTASKS=$(cat $MACHINE | grep first_pass_bqsr | cut -f 4)
+# #first_pass_bqsr.s
+# BQSRID=$(sbatch \
+# --mem=${first_pass_bqsrMEM}G --time=${first_pass_bqsrTIME} --nodes=1 --ntasks=${first_pass_bqsrNTASKS} \
+# --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
+# --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/first_pass_bqsr-${SM}-%j.out \
+# $TASKDIR/first_pass_bqsr.sh --sample $SM \
+# --workdir $CWD --gatk $GATK --java $JAVAMOD --recal $RECAL --ref $REF \
+# --perform $PERFORM --threads ${first_pass_bqsrNTASKS} \
+# --memrequest ${first_pass_bqsrMEM} $EXOME | cut -f 4 -d ' ')
 
-echo $BQSRID
-
-
-print_readsMEM=$(cat $MACHINE | grep print_reads | cut -f 2)
-print_readsTIME=$(cat $MACHINE | grep print_reads | cut -f 3)
-print_readsNTASKS=$(cat $MACHINE | grep print_reads | cut -f 4)
-# print_reads.sh
-# needs a job id for cat_sort_index_bams.sh
-CATBAMID=$(sbatch \
---mem=${print_readsMEM}G --time=${print_readsTIME} --nodes=1 --ntasks=${print_readsNTASKS} \
---array=1-$lociLen \
---job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
---mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/print_reads-${SM}-%A-%a-%j.out \
-$TASKDIR/print_reads.sh --sample $SM \
---workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM \
---loci $LOCI --memrequest ${print_readsMEM} | cut -f 4 -d ' ')
+# echo $BQSRID
 
 
-second_pass_bqsrMEM=$(cat $MACHINE | grep second_pass_bqsr | cut -f 2)
-second_pass_bqsrTIME=$(cat $MACHINE | grep second_pass_bqsr | cut -f 3)
-second_pass_bqsrNTASKS=$(cat $MACHINE | grep second_pass_bqsr | cut -f 4)
-# second_pass_bqsr.sh
-SECONDBQSRID=$(sbatch \
---mem=${second_pass_bqsrMEM}G --time=${second_pass_bqsrTIME} --ntasks=${second_pass_bqsrNTASKS} \
--d afterok:$BQSRID  --nodes=1 \
---job-name=${SM}-recal-plots --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
---mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/second_pass_bqsr-${SM}-%j.out \
-$TASKDIR/second_pass_bqsr.sh --sample $SM \
---workdir $CWD --gatk $GATK --java $JAVAMOD --recal $RECAL --ref $REF \
---perform $PERFORM --threads ${second_pass_bqsrNTASKS} \
- --rversion $RMOD --memrequest ${second_pass_bqsrMEM} $EXOME | cut -f 4 -d ' ')
-
-echo $SECONDBQSRID
-
-fi
-
-echo $CATBAMID
+# print_readsMEM=$(cat $MACHINE | grep print_reads | cut -f 2)
+# print_readsTIME=$(cat $MACHINE | grep print_reads | cut -f 3)
+# print_readsNTASKS=$(cat $MACHINE | grep print_reads | cut -f 4)
+# # print_reads.sh
+# # needs a job id for cat_sort_index_bams.sh
+# CATBAMID=$(sbatch \
+# --mem=${print_readsMEM}G --time=${print_readsTIME} --nodes=1 --ntasks=${print_readsNTASKS} \
+# --array=1-$lociLen \
+# --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
+# --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/print_reads-${SM}-%A-%a-%j.out \
+# $TASKDIR/print_reads.sh --sample $SM \
+# --workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM \
+# --loci $LOCI --memrequest ${print_readsMEM} | cut -f 4 -d ' ')
 
 
-cat_sort_index_bamsMEM=$(cat $MACHINE | grep cat_sort_index_bams | cut -f 2)
-cat_sort_index_bamsTIME=$(cat $MACHINE | grep cat_sort_index_bams | cut -f 3)
-cat_sort_index_bamsNTASKS=$(cat $MACHINE | grep cat_sort_index_bams | cut -f 4)
+# second_pass_bqsrMEM=$(cat $MACHINE | grep second_pass_bqsr | cut -f 2)
+# second_pass_bqsrTIME=$(cat $MACHINE | grep second_pass_bqsr | cut -f 3)
+# second_pass_bqsrNTASKS=$(cat $MACHINE | grep second_pass_bqsr | cut -f 4)
+# # second_pass_bqsr.sh
+# SECONDBQSRID=$(sbatch \
+# --mem=${second_pass_bqsrMEM}G --time=${second_pass_bqsrTIME} --ntasks=${second_pass_bqsrNTASKS} \
+# -d afterok:$BQSRID  --nodes=1 \
+# --job-name=${SM}-recal-plots --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
+# --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/second_pass_bqsr-${SM}-%j.out \
+# $TASKDIR/second_pass_bqsr.sh --sample $SM \
+# --workdir $CWD --gatk $GATK --java $JAVAMOD --recal $RECAL --ref $REF \
+# --perform $PERFORM --threads ${second_pass_bqsrNTASKS} \
+#  --rversion $RMOD --memrequest ${second_pass_bqsrMEM} $EXOME | cut -f 4 -d ' ')
+
+# echo $SECONDBQSRID
+
+# fi
+
+# echo $CATBAMID
+
+
+# cat_sort_index_bamsMEM=$(cat $MACHINE | grep cat_sort_index_bams | cut -f 2)
+# cat_sort_index_bamsTIME=$(cat $MACHINE | grep cat_sort_index_bams | cut -f 3)
+# cat_sort_index_bamsNTASKS=$(cat $MACHINE | grep cat_sort_index_bams | cut -f 4)
 # cat_sort_index.sh
 # this can run parallele to haplotype caller
 # needs to take two alternative jobIDs, no we can just overwrite the variable if bqsr is true
 # push the output to final destination
 # then get an md5sum
-sbatch \
---mem=${cat_sort_index_bamsMEM}G --time=${cat_sort_index_bamsTIME} --nodes=1 \
---ntasks=${cat_sort_index_bamsNTASKS} \
---job-name=${SM}-cat-bams --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d afterok:$CATBAMID \
---mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/cat_sort_index_bams-${SM}-%j.out \
-$TASKDIR/cat_sort_index_bams.sh --sample $SM \
---ref $REF --workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads ${cat_sort_index_bamsNTASKS} \
---bqsr $BQSR --memrequest $cat_sort_index_bamsMEM --rversion $RMOD --picard $PICARD
+# sbatch \
+# --mem=${cat_sort_index_bamsMEM}G --time=${cat_sort_index_bamsTIME} --nodes=1 \
+# --ntasks=${cat_sort_index_bamsNTASKS} \
+# --job-name=${SM}-cat-bams --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d afterok:$CATBAMID \
+# --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/cat_sort_index_bams-${SM}-%j.out \
+# $TASKDIR/cat_sort_index_bams.sh --sample $SM \
+# --ref $REF --workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads ${cat_sort_index_bamsNTASKS} \
+# --bqsr $BQSR --memrequest $cat_sort_index_bamsMEM --rversion $RMOD --picard $PICARD
 
 
 haplotypecallerMEM=$(cat $MACHINE | grep haplotypecaller | cut -f 2)
