@@ -96,7 +96,7 @@ samtools index -@ $THREADS I=$CWD/$SM/bam/$SM.$inStatus.bam
 
 java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $PICARD CollectMultipleMetrics \
 TMP_DIR=$CWD/$SM/tmp \
-I=$CWD/$SM/bam/$SM.inStatus.bam \
+I=$CWD/$SM/bam/$SM.$inStatus.bam \
 O=$CWD/$SM/metrics/$SM.multiple_metrics \
 R=$REF
 
