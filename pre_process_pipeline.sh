@@ -8,7 +8,6 @@ GATK=/cluster/software/gatk/gatk-3.8/GenomeAnalysisTK.jar
 PICARD=/cluster/software/picard-tools/picard-tools-2.1.1/picard.jar
 JAVAMOD=java/openjdk/java-1.8.0-openjdk
 PIGZMOD=pigz/pigz-2.4
-FASTQCMOD=fastqc/fastqc-0.11.7
 BWAMOD=bwa/bwa-0.7.17
 RMOD=R/R-3.3.3
 BEDTOOLSMOD=bedtools/bedtools-2.26.0
@@ -18,6 +17,12 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
 -h | --help )
 echo "check everything is ok" 
 exit
+;;
+-a | --account )
+shift; ACCOUNT=$1
+;;
+-b | --bam )
+shift; BAM=$1
 ;;
 -c | --config )
 shift; CONFIG=$1
@@ -30,29 +35,10 @@ R1=$(echo $(cat $CONFIG | cut -f6) | sed 's/ /,/g')
 R2=$(echo $(cat $CONFIG | cut -f7) | sed 's/ /,/g')
 D1=$(echo $(cat $CONFIG | cut -f8) | sed 's/ /,/g')
 D2=$(echo $(cat $CONFIG | cut -f9) | sed 's/ /,/g')
-REF=$(cat $CONFIG | sed '2q;d' | awk {'print $10'}) # all of these and below could be individula command line options, rather than in the config
-RECAL=$(cat $CONFIG | sed '2q;d' | awk {'print $11'})
-CWD=$(cat $CONFIG | sed '2q;d' | awk {'print $12'}) # root HPC dir for processing
-BAM=$(cat $CONFIG | sed '2q;d' | awk {'print $13'}) # final destination for files
-GVCF=$(cat $CONFIG | sed '2q;d' | awk {'print $14'})
-METRICS=$(cat $CONFIG | sed '2q;d' | awk {'print $15'})
-LOG=$(cat $CONFIG | sed '2q;d' | awk {'print $16'})
 runLen=$(expr $(wc -l $CONFIG | cut -d" " -f1) - 1)
 ;;
--m | --machine-config )
-shift; MACHINE=$1
-;;
--r | --recal )
-BQSR=true
-;;
--P | --perform )
-PERFORM=true
-;;
--a | --account )
-shift; ACCOUNT=$1
-;;
--p | --partition )
-shift; PARTITION=$1
+-C | --cwd )
+shift; CWD=$1
 ;;
 -e | --email )
 shift; EMAIL=$1
@@ -60,32 +46,54 @@ shift; EMAIL=$1
 -E | --exomes )
 shift; EXOME=$1
 ;;
--T | --taskdir )
+-g | --gvcf )
+shift; GVCF=$1
+;;
+-l | --log )
+shift; LOG=$1
+;;
+-m | --machine-config )
+shift; MACHINE=$1
+;;
+-M | --metrics )
+shift; METRICS=$1
+;;
+-p | --partition )
+shift; PARTITION=$1
+;;
+-P | --perform )
+PERFORM=true
+;;
+-r | --ref )
+shift; REF=$1
+;;
+-R | --recal )
+shift; RECAL=$1
+BQSR=true
+;;
+-t | --taskdir )
 shift; TASKDIR=$1
 ;;
--s | --samtools )
-shift; SAMTOOLSMOD=$1
-;;
--g | --gatk )
-shift; GATK=$1
-;;
--t | --picard )
-shift; PICARD=$1
-;;
--c | --pigz )
-shift; JAVAMOD=$1
-;;
--f | --fastqc )
-shift; FASTQCMOD=$1
-;;
--b | --bwa )
+--bwa )
 shift; BWAMOD=$1
 ;;
--B | --bedtools )
+--bedtools )
 shift; BEDTOOLSMOD=$1
 ;;
--r | --rversion )
+--rversion )
 shift; RMOD=$1
+;;
+--samtools )
+shift; SAMTOOLSMOD=$1
+;;
+--picard )
+shift; PICARD=$1
+;;
+--pigz )
+shift; PIGZMOD=$1
+;;
+--gatk )
+shift; GATK=$1
 ;;
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
@@ -120,7 +128,7 @@ $TASKDIR/prepare_dirs.sh --sample $SM \
 --read1 $R1 --read2 $R2 --path1 $D1 --path2 $D2 \
 --ref $REF --workdir $CWD --recal $RECAL --bam $BAM \
 --gvcf $GVCF --metrics $METRICS --log $LOG \
---bwa $BWAMOD --fastqc $FASTQCMOD --pigz $PIGZMOD --java $JAVAMOD \
+--bwa $BWAMOD --pigz $PIGZMOD --java $JAVAMOD \
 --samtools $SAMTOOLSMOD --gatk $GATK --picard $PICARD \
 --runLen $runLen --perform $PERFORM --bqsr $BQSR --taskdir $TASKDIR \
 --rversion $RMOD --bedtools $BEDTOOLSMOD
