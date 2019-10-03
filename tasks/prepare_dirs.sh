@@ -74,9 +74,6 @@ shift; PICARD=$1
 --pigz )
 shift; PIGZMOD=$1
 ;;
---fastqc )
-shift; FASTQCMOD=$1
-;;
 --bwa )
 shift; BWAMOD=$1
 ;;
@@ -155,7 +152,6 @@ echo -e "\n\n$(date)\nCheck for programs\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.
 
 module load $JAVAMOD
 module load $SAMTOOLSMOD
-module load $FASTQCMOD
 module load $PIGZMOD
 module load $BWAMOD
 module load $RMOD
@@ -202,15 +198,6 @@ else
     scancel -n $SM
 fi
 
-fastqc --version; fasExit=$?
-if [[ $fasExit = 0 ]]; then
-    echo -e "$(date)\nUsing fastqc version:" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
-    fastqc --version &>> $CWD/$SM/log/prepare_dirs-${SM}.out
-    echo -e "\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
-else
-    echo -e "$(date)\nFastqc did not exit with 0 status, exiting" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
-    scancel -n $SM
-fi
 
 pigz -V; pigExit=$?
 if [[ $pigExit = 0 ]]; then

@@ -324,7 +324,7 @@ fi
 cat_sort_index_bamsMEM=$(cat $MACHINE | grep cat_sort_index_bams | cut -f 2)
 cat_sort_index_bamsTIME=$(cat $MACHINE | grep cat_sort_index_bams | cut -f 3)
 cat_sort_index_bamsNTASKS=$(cat $MACHINE | grep cat_sort_index_bams | cut -f 4)
-cat_sort_index.sh
+# cat_sort_index.sh
 # this can run parallele to haplotype caller
 # needs to take two alternative jobIDs, no we can just overwrite the variable if bqsr is true
 # push the output to final destination
