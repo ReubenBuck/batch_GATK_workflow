@@ -69,8 +69,7 @@ java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \
     -L $DOEXOME \
     -XL $CWD/$SM/tmp/$SM.gaps.bed \
 	-knownSites $RECAL \
-	-o $CWD/$SM/metrics/$SM.recal_data.table \
-    -PF $CWD/$SM/metrics/PF.BaseRecalibrator.$SM.txt
+	-o $CWD/$SM/metrics/$SM.recal_data.table
 
 if [[ -s $CWD/$SM/metrics/$SM.recal_data.table ]]; then
     echo -e "$(date)\t${SLURM_JOB_ID}\tend\tfirst_pass_bqsr.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log

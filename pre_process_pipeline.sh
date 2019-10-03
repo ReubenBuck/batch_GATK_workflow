@@ -282,7 +282,7 @@ CATBAMID=$(sbatch \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/print_reads-${SM}-%A-%a-%j.out \
 $TASKDIR/print_reads.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM \
---memrequest ${print_readsMEM} | cut -f 4 -d ' ')
+--memrequest ${print_readsMEM} --threads ${print_readsNTASKS}| cut -f 4 -d ' ')
 
 echo $CATBAMID
 

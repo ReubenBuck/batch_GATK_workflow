@@ -24,6 +24,9 @@ shift; CWD=$1
 --memrequest )
 shift; MEM=$1
 ;;
+--threads )
+shift; THREADS=$1
+;;
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
@@ -44,7 +47,7 @@ fi
 echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tprint_read.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
 
 java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \
--nct 20 \
+-nct $THREADS \
 -T PrintReads \
 -R $REF \
 -L $CWD/$SM/tmp/split_range/$TARGET \
