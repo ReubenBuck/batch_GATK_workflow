@@ -30,6 +30,9 @@ shift; MEM=$1
 --exome )
 shift; EXOME=$1
 ;;
+--array-len )
+shift; ARRAYLEN=$1
+;;
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
@@ -54,8 +57,9 @@ fi
 echo $DOEXOME
 
 # make a list of bams to pass to BQSR
-LOCI=$(echo $(ls ${REF%/*}/target_loci) |  sed 's/.intervals//g' | sed 's/ /,/g')
-eval ls $CWD/$SM/bam/$SM.{$(echo $LOCI)}.realign.bam > $CWD/$SM/tmp/$SM.bams.list
+#LOCI=$(echo $(ls ${REF%/*}/target_loci) |  sed 's/.intervals//g' | sed 's/ /,/g')
+TASKS=$(echo $(seq -f "%05g" 1 $ARRAYLEN) | sed 's/ /,/g')
+eval ls $CWD/$SM/bam/$SM.{$(echo $TASKS)}.realign.bam > $CWD/$SM/tmp/$SM.bams.list
 
 
 java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \

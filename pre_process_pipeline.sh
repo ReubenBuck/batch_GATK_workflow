@@ -245,7 +245,7 @@ $TASKDIR/realigner_target_creator.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM \
 --threads ${realigner_target_creatorNTASKS} --memrequest ${realigner_target_creatorMEM}
 
-indel realignment 
+#indel realignment 
 
 
 indel_realignerMEM=$(cat $MACHINE | grep indel_realigner | cut -f 2)
@@ -258,10 +258,13 @@ CATBAMID=$(sbatch \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/indel_realigner-${TASKS}-%A-%a-%j.out \
 $TASKDIR/indel_realigner.sh --sample $SM \
---workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM --loci $LOCI \
+--workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM \
 --memrequest ${indel_realignerMEM} | cut -f 4 -d ' ')
+# need to probably remove $loci var
+# since loci are now sotred in the temp dir
 
-echo $CATBAMID yes
+
+echo $CATBAMID
 
 if [[ $BQSR = true ]]; then
 CATBAMID=""
@@ -276,7 +279,7 @@ BQSRID=$(sbatch \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/first_pass_bqsr-${SM}-%j.out \
 $TASKDIR/first_pass_bqsr.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --recal $RECAL --ref $REF \
---perform $PERFORM --threads ${first_pass_bqsrNTASKS} \
+--perform $PERFORM --threads ${first_pass_bqsrNTASKS} --array-len $ARRAYLEN \
 --memrequest ${first_pass_bqsrMEM} $EXOME | cut -f 4 -d ' ')
 
 echo $BQSRID
@@ -296,6 +299,8 @@ $TASKDIR/print_reads.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM \
 --loci $LOCI --memrequest ${print_readsMEM} | cut -f 4 -d ' ')
 
+echo $CATBAMID
+
 
 second_pass_bqsrMEM=$(cat $MACHINE | grep second_pass_bqsr | cut -f 2)
 second_pass_bqsrTIME=$(cat $MACHINE | grep second_pass_bqsr | cut -f 3)
@@ -314,8 +319,6 @@ $TASKDIR/second_pass_bqsr.sh --sample $SM \
 echo $SECONDBQSRID
 
 fi
-
-echo $CATBAMID
 
 
 cat_sort_index_bamsMEM=$(cat $MACHINE | grep cat_sort_index_bams | cut -f 2)
@@ -396,6 +399,7 @@ $TASKDIR/cp_files.sh --sample $SM \
 
 fi
 
+echo $FINALID
 
 clean_wdMEM=$(cat $MACHINE | grep clean_wd | cut -f 2)
 clean_wdTIME=$(cat $MACHINE | grep clean_wd | cut -f 3)
