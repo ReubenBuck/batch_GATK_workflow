@@ -144,6 +144,9 @@ elif [[ $PERFORM = false ]]; then
 else
     echo -e "$(date)\nPerformance var is $PERFORM, requires true/false, exiting\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 # Check for programs
@@ -165,6 +168,9 @@ if [[ $Rexit = 0 ]]; then
 else
     echo -e "$(date)\nR did not exit with 0 status, exiting" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 bedtools --version; Bedexit=$?
@@ -175,6 +181,9 @@ if [[ $Bedexit = 0 ]]; then
 else
     echo -e "$(date)\nbedtools did not exit with 0 status, exiting" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 
@@ -186,6 +195,9 @@ if [[ $javExit = 0 ]]; then
 else
     echo -e "$(date)\nJava did not exit with 0 status, exiting" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 samtools --version; samExit=$?
@@ -196,6 +208,9 @@ if [[ $samExit = 0 ]]; then
 else
     echo -e "$(date)\nSamtools did not exit with 0 status, exiting" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 
@@ -207,6 +222,9 @@ if [[ $pigExit = 0 ]]; then
 else
     echo -e "$(date)\Pigz did not exit with 0 status, exiting" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 java -jar $GATK -version; gatExit=$?
@@ -217,6 +235,9 @@ if [[ $gatExit = 0 ]]; then
 else
     echo -e "$(date)\GATK did not exit with 0 status, exiting" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 bwa &> $CWD/$SM/tmp/bwa.open.txt
@@ -228,6 +249,9 @@ if [[ $(wc -l $CWD/$SM/tmp/bwa.version.txt | cut -d" " -f1) = 1 ]]; then
 else
     echo -e "$(date)\nBWA did not report version, exiting" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 
@@ -239,6 +263,9 @@ if [[ $(wc -l $CWD/$SM/tmp/picard.version.txt | cut -d" " -f1) = 1 ]]; then
 else
     echo -e "$(date)\nPicard MarkDuplicates did not report version, exiting" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 echo -e "\n\n$(date)\nProgram checks complete.....\n\n\n\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
@@ -254,6 +281,9 @@ for i in $(seq 1 $runLen); do
         else
             echo -e "$(date)\nbam file ${D1arr[$i]}/${D2arr[$i]} not found, exiting\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
             scancel -n $SM
+            scancel -n ${SM}-unmapped
+            scancel -n ${SM}-recal-plots
+            scancel -n ${SM}-cat-bams
         fi
     elif [[ ${D2arr[$i]} = *".cram" ]]; then
         if [[ -e ${D1arr[$i]}/${D2arr[$i]} ]]; then
@@ -261,6 +291,9 @@ for i in $(seq 1 $runLen); do
         else
             echo -e "$(date)\ncram file ${D1arr[$i]}/${D2arr[$i]} not found\n", exiting &>> $CWD/$SM/log/prepare_dirs-${SM}.out
             scancel -n $SM
+            scancel -n ${SM}-unmapped
+            scancel -n ${SM}-recal-plots
+            scancel -n ${SM}-cat-bams
         fi
     else
         if [[ -e ${D1arr[$i]}/${R1arr[$i]}.gz && -e ${D2arr[$i]}/${R2arr[$i]}.gz ]]; then
@@ -268,6 +301,9 @@ for i in $(seq 1 $runLen); do
         else
             echo -e "$(date)\nfastq files ${D1arr[$i]}/${R1arr[$i]}.gz and ${D2arr[$i]}/${R2arr[$i]}.gz not found, exiting\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
             scancel -n $SM
+            scancel -n ${SM}-unmapped
+            scancel -n ${SM}-recal-plots
+            scancel -n ${SM}-cat-bams
         fi
     fi
 done
@@ -282,6 +318,9 @@ if [[ -e $REF ]]; then
 else
     echo -e "$(date)\nref file $REF not found, exiting\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 if [[ -e $REF.amb && -e $REF.ann && -e $REF.bwt && -e $REF.pac && -e $REF.sa ]]; then
@@ -289,6 +328,9 @@ if [[ -e $REF.amb && -e $REF.ann && -e $REF.bwt && -e $REF.pac && -e $REF.sa ]];
 else
     echo -e "$(date)\nbwa index files not found, exiting\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 if [[ -e ${REF/.fa/}.dict ]]; then
@@ -296,6 +338,9 @@ if [[ -e ${REF/.fa/}.dict ]]; then
 else
     echo -e "$(date)\ndict file not found, exiting\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 if [[ -e $REF.fai ]]; then
@@ -303,6 +348,9 @@ if [[ -e $REF.fai ]]; then
 else
     echo -e "$(date)\nfai file not found, exiting\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 # check if targets exist
@@ -311,6 +359,9 @@ if [[ -d ${REF%/*}/target_loci/ ]]; then
 else
     echo -e "$(date)\ntarget_loci dir not found, exiting\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi 
 
 # check if recal db exists if recal is required
@@ -321,12 +372,18 @@ if [[ $BQSR = true ]]; then
     else
         echo -e "$(date)\nBQSR DB required and not found, exiting\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
         scancel -n $SM
+        scancel -n ${SM}-unmapped
+        scancel -n ${SM}-recal-plots
+        scancel -n ${SM}-cat-bams
     fi
 elif [[ $BQSR = false ]]; then
     echo -e "$(date)\nBQSR is not required from user\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
 else
     echo -e "$(date)\nBQSR var is $BQSR, requires true/false, exiting\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 echo -e "\n\n$(date)\nReference file checks complete.....\n\n\n\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
@@ -341,6 +398,9 @@ if [[ -d $BAM ]]; then
 else
     echo -e "$(date)\nFinal bam dir, $BAM, not found, exiting\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 if [[ -d $GVCF ]]; then
@@ -348,6 +408,9 @@ if [[ -d $GVCF ]]; then
 else
     echo -e "$(date)\nFinal GVCF dir, $GVCF, not found, exiting\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 if [[ -d $LOG ]]; then
@@ -355,6 +418,9 @@ if [[ -d $LOG ]]; then
 else
     echo -e "$(date)\nFinal log dir, $LOG, not found, exiting\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 if [[ -d $METRICS ]]; then
@@ -362,6 +428,9 @@ if [[ -d $METRICS ]]; then
 else
     echo -e "$(date)\nFinal metrics dir, $METRICS, not found, exiting\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 echo -e "\n\n$(date)\nFinal destination checks complete.....\n\n\n\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
@@ -388,6 +457,9 @@ if [[ -s $CWD/$SM/tmp/$SM.gaps.bed && -s $CWD/$SM/tmp/$SM.genome.bed && -s $CWD/
 else
     echo -e "$(date)\nRef and gap bed files not found, exiting"
     scancel $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 
@@ -405,6 +477,9 @@ if [[ -s $CWD/$SM/tmp/split_range/$SM.00001.bed ]]; then
 else
     echo -e "$(date)\nFirst split range not found, exiting"
     scancel $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 # get bqsr regions for training and testing
@@ -419,6 +494,9 @@ if [[ -s $CWD/$SM/tmp/$SM.bqsr.train.bed && -s $CWD/$SM/tmp/$SM.bqsr.test.bed ]]
 else
     echo -e "$(date)\nTrain and test intervals not found, exiting"
     scancel $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 

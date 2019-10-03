@@ -72,6 +72,9 @@ if [[ -s $CWD/$SM/metrics/$SM.post_recal_data.table ]]; then
 else
     echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tsecond_pass_bqsr.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tsecond_pass_bqsr.sh-analyze\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
@@ -88,4 +91,7 @@ if [[ -s $CWD/$SM/metrics/$SM.recalibration_plots.pdf ]]; then
 else
     echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tsecond_pass_bqsr.sh-analyze\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi

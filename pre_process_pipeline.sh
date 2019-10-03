@@ -117,15 +117,6 @@ if [[ ! -z $EXOME ]]; then
 	EXOME=$(echo "--exome $EXOME")	
 fi
 
-# has been replaced by array len
-#lociLen=$(ls ${REF%/*}/target_loci | wc -l)
-
-# this one is read in as a unix array to the programs
-# this will need to be integrated with the split read stuff
-#LOCI=$(echo $(ls ${REF%/*}/target_loci) |  sed 's/ /,/g')
-
-# need to check for partitions
-# and account and email
 
 prepare_dirsMEM=$(cat $MACHINE | grep prepare_dirs | cut -f 2)
 prepare_dirsTIME=$(cat $MACHINE | grep prepare_dirs | cut -f 3)
@@ -245,9 +236,7 @@ $TASKDIR/realigner_target_creator.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM \
 --threads ${realigner_target_creatorNTASKS} --memrequest ${realigner_target_creatorMEM}
 
-#indel realignment 
-
-
+#indel realignment
 indel_realignerMEM=$(cat $MACHINE | grep indel_realigner | cut -f 2)
 indel_realignerTIME=$(cat $MACHINE | grep indel_realigner | cut -f 3)
 indel_realignerNTASKS=$(cat $MACHINE | grep indel_realigner | cut -f 4)
@@ -260,9 +249,6 @@ CATBAMID=$(sbatch \
 $TASKDIR/indel_realigner.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM \
 --memrequest ${indel_realignerMEM} | cut -f 4 -d ' ')
-# need to probably remove $loci var
-# since loci are now sotred in the temp dir
-
 
 echo $CATBAMID
 
@@ -284,7 +270,6 @@ $TASKDIR/first_pass_bqsr.sh --sample $SM \
 
 echo $BQSRID
 
-
 print_readsMEM=$(cat $MACHINE | grep print_reads | cut -f 2)
 print_readsTIME=$(cat $MACHINE | grep print_reads | cut -f 3)
 print_readsNTASKS=$(cat $MACHINE | grep print_reads | cut -f 4)
@@ -300,7 +285,6 @@ $TASKDIR/print_reads.sh --sample $SM \
 --memrequest ${print_readsMEM} | cut -f 4 -d ' ')
 
 echo $CATBAMID
-
 
 second_pass_bqsrMEM=$(cat $MACHINE | grep second_pass_bqsr | cut -f 2)
 second_pass_bqsrTIME=$(cat $MACHINE | grep second_pass_bqsr | cut -f 3)
@@ -319,7 +303,6 @@ $TASKDIR/second_pass_bqsr.sh --sample $SM \
 echo $SECONDBQSRID
 
 fi
-
 
 cat_sort_index_bamsMEM=$(cat $MACHINE | grep cat_sort_index_bams | cut -f 2)
 cat_sort_index_bamsTIME=$(cat $MACHINE | grep cat_sort_index_bams | cut -f 3)
@@ -368,10 +351,6 @@ $TASKDIR/cat_gvcf.sh --sample $SM \
 --workdir $CWD --picard $PICARD --java $JAVAMOD --ref $REF --array-len $ARRAYLEN \
 --perform $PERFORM --memrequest ${cat_gvcfMEM} | cut -f 4 -d ' ')
 echo $VARCALLID
-
-# here we can measure the time and mem each process takes
-
-
 
 
 cp_filesMEM=$(cat $MACHINE | grep cp_files | cut -f 2)

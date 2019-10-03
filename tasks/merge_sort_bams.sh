@@ -44,6 +44,9 @@ if [[ $(wc -c <$CWD/$SM/bam/$SM.bam) -ge 1000 ]]; then
 else
     echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tmerge_sort_bams.sh-merge\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 # sort
@@ -57,6 +60,9 @@ if [[ $(wc -c <$CWD/$SM/bam/$SM.bam) -ge 1000 ]]; then
 else
     echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tmerge_sort_bams.sh-sort\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 

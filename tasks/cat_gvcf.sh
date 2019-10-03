@@ -59,4 +59,7 @@ if [[ -s $CWD/$SM/gvcf/$SM.g.vcf.gz ]]; then
 else
     echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tcat_gvcf.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+	scancel -n ${SM}-recal-plots
+	scancel -n ${SM}-cat-bams
 fi

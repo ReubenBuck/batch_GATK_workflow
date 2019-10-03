@@ -38,4 +38,7 @@ if [[ -s $CWD/$SM/bam/$SM.markdup.bam.bai ]]; then
 else
     echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tindex.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+	scancel -n ${SM}-recal-plots
+	scancel -n ${SM}-cat-bams
 fi

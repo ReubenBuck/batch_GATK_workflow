@@ -48,5 +48,8 @@ if [[ $(wc -c <$CWD/$SM/bam/$SM.unmap.bam) -ge 1000 && $(wc -c <$CWD/$SM/bam/$SM
 else
     echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tunmapped_reads.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+	scancel -n ${SM}-recal-plots
+	scancel -n ${SM}-cat-bams
 fi
 

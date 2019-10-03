@@ -44,11 +44,6 @@ paste $CWD/$SM/tmp/jobid.txt $CWD/$SM/tmp/jobspec.txt &>> $CWD/$SM/metrics/$SM.e
 done
 
 
-
-
-
-
-
 echo -e "$(date)\tbegin\tcp_files.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
 # update permissions if old files exist
@@ -67,9 +62,6 @@ fi
 if [[ -e $GVCF/$SM.g.vcf.gz ]]; then
         chmod -R u+w $GVCF/$SM.g.vcf.gz*
 fi
-
-
-
 
 
 # bams 

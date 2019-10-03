@@ -75,4 +75,7 @@ if [[ -s $CWD/$SM/gvcf/$SM.$TASK.g.vcf.gz ]]; then
 else
     echo -e "$(date)\t${SLURM_JOB_ID}\tfail\thaplotypecaller.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi

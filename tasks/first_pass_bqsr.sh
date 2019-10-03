@@ -57,7 +57,6 @@ fi
 echo $DOEXOME
 
 # make a list of bams to pass to BQSR
-#LOCI=$(echo $(ls ${REF%/*}/target_loci) |  sed 's/.intervals//g' | sed 's/ /,/g')
 TASKS=$(echo $(seq -f "%05g" 1 $ARRAYLEN) | sed 's/ /,/g')
 eval ls $CWD/$SM/bam/$SM.{$(echo $TASKS)}.realign.bam > $CWD/$SM/tmp/$SM.bams.list
 
@@ -78,4 +77,7 @@ if [[ -s $CWD/$SM/metrics/$SM.recal_data.table ]]; then
 else
     echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tfirst_pass_bqsr.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi

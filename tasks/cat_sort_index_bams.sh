@@ -53,8 +53,6 @@ if [[ $PERFORM = true ]]; then
     vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_cat_sort_index_bams_$SM.txt &
 fi
 
-#LOCI=$(echo $(ls ${REF%/*}/target_loci) |  sed 's/.intervals//g' | sed 's/ /,/g')
-
 TASKS=$(echo $(seq -f "%05g" 1 $ARRAYLEN) | sed 's/ /,/g')
 
 echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tcat_sort_index_bams.sh-concat\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
@@ -66,6 +64,9 @@ if [[ -s $CWD/$SM/bam/$SM.$inStatus.cat.bam ]]; then
 else
     echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tcat_sort_index_bams.sh-concat\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 
@@ -78,6 +79,9 @@ if [[ -s $CWD/$SM/bam/$SM.$inStatus.bam ]]; then
 else
     echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tcat_sort_index_bams.sh-sort\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 
@@ -90,6 +94,9 @@ if [[ -s $CWD/$SM/bam/$SM.$inStatus.bam.bai ]]; then
 else
     echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tcat_sort_index_bams.sh-index\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi
 
 
@@ -108,4 +115,7 @@ if [[ -s $CWD/$SM/metrics/$SM.multiple_metrics.alignment_summary_metrics ]]; the
 else
     echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tcat_sort_index_bams.sh-metrics\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+    scancel -n ${SM}-recal-plots
+    scancel -n ${SM}-cat-bams
 fi

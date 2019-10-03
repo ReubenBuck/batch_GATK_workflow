@@ -87,6 +87,9 @@ else
 	echo -e "$(date)\nUncompressed read pair files not found for task no. $TASK, exiting\n"
 	echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tprepare_reads.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
 	scancel -n $SM
+	scancel -n ${SM}-unmapped
+	scancel -n ${SM}-recal-plots
+	scancel -n ${SM}-cat-bams
 fi
 
 

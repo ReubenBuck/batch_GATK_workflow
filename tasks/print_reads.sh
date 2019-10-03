@@ -58,6 +58,9 @@ if [[ -s $CWD/$SM/bam/$SM.$TASK.recal.bam ]]; then
 else
     echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tprint_read.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+	scancel -n ${SM}-recal-plots
+	scancel -n ${SM}-cat-bams
 fi
 
 

@@ -46,4 +46,7 @@ if [[ $(wc -c <$CWD/$SM/bam/$SM.markdup.bam) -ge 1000 ]]; then
 else
     echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tmark_duplicates.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
+    scancel -n ${SM}-unmapped
+	scancel -n ${SM}-recal-plots
+	scancel -n ${SM}-cat-bams
 fi

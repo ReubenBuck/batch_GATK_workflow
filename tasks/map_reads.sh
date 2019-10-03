@@ -87,6 +87,9 @@ if [[ $(wc -c <$CWD/$SM/bam/$SM.$TASK.bam) -ge 1000 ]]; then
 else
 	echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tmap_reads.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
 	scancel -n $SM
+	scancel -n ${SM}-unmapped
+	scancel -n ${SM}-recal-plots
+	scancel -n ${SM}-cat-bams
 fi
 
 
