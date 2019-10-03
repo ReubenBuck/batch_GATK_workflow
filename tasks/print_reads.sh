@@ -6,10 +6,6 @@ shift; SM=$1
 --gatk )
 shift; GATK=$1
 ;;
---loci )
-shift; LOCI=$1
-IFS=', ' read -r -a LOCIarr <<< "$(echo ,$LOCI)"
-;;
 --java )
 shift; JAVAMOD=$1
 ;;
@@ -35,32 +31,32 @@ sleep $((RANDOM % 10))
 
 module load $JAVAMOD
 
-TASK=${SLURM_ARRAY_TASK_ID}
-TARGET=${LOCIarr[$TASK]}
+TASK=$(seq -f "%05g" ${SLURM_ARRAY_TASK_ID} ${SLURM_ARRAY_TASK_ID})
+TARGET=$SM.$TASK.bed
 
 if [[ $PERFORM = true ]]; then
-    echo -e "$(date): first_pass_bqsr.sh is running on $(hostname)" &>> $CWD/$SM/metrics/perform_first_pass_bqsr_$SM.txt
-    scontrol show jobid -dd ${SLURM_JOB_ID} &>> $CWD/$SM/metrics/perform_first_pass_bqsr_$SM.txt
-    echo -e "\n\n\n" &>> $CWD/$SM/metrics/perform_first_pass_bqsr_$SM.txt
-    vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_first_pass_bqsr_$SM.txt &
+    echo -e "$(date): first_pass_bqsr.sh is running on $(hostname)" &>> $CWD/$SM/metrics/perform_first_pass_bqsr_$SM_$TASK.txt
+    scontrol show jobid -dd ${SLURM_JOB_ID} &>> $CWD/$SM/metrics/perform_first_pass_bqsr_$SM_$TASK.txt
+    echo -e "\n\n\n" &>> $CWD/$SM/metrics/perform_first_pass_bqsr_$SM_$TASK.txt
+    vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_first_pass_bqsr_$SM_$TASK.txt &
 fi
 
-echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tprint_read.sh\t$SM\t${TARGET%\.intervals}" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tprint_read.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
 
 java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \
 -nct 20 \
 -T PrintReads \
 -R $REF \
--L ${REF%/*}/target_loci/$TARGET \
--I $CWD/$SM/bam/$SM.${TARGET%\.intervals}.realign.bam \
+-L $CWD/$SM/tmp/split_range/$TARGET \
+-I $CWD/$SM/bam/$SM.$TASK.realign.bam \
 -BQSR $CWD/$SM/metrics/$SM.recal_data.table \
--o $CWD/$SM/bam/$SM.${TARGET%\.intervals}.recal.bam
+-o $CWD/$SM/bam/$SM.$TASK.recal.bam
 
 
-if [[ -s $CWD/$SM/bam/$SM.${TARGET%\.intervals}.recal.bam ]]; then
-    echo -e "$(date)\t${SLURM_JOB_ID}\tend\tprint_read.sh\t$SM\t${TARGET%\.intervals}" &>> $CWD/$SM/log/$SM.run.log
+if [[ -s $CWD/$SM/bam/$SM.$TASK.recal.bam ]]; then
+    echo -e "$(date)\t${SLURM_JOB_ID}\tend\tprint_read.sh\t$SM\t$TASK}" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tprint_read.sh\t$SM\t${TARGET%\.intervals}" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tprint_read.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi
 

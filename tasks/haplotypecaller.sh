@@ -6,10 +6,6 @@ shift; SM=$1
 --gatk )
 shift; GATK=$1
 ;;
---loci )
-shift; LOCI=$1
-IFS=', ' read -r -a LOCIarr <<< "$(echo ,$LOCI)"
-;;
 --java )
 shift; JAVAMOD=$1
 ;;
@@ -41,8 +37,8 @@ sleep $((RANDOM % 10))
 
 module load $JAVAMOD
 
-TASK=${SLURM_ARRAY_TASK_ID}
-TARGET=${LOCIarr[$TASK]}
+TASK=$(seq -f "%05g" ${SLURM_ARRAY_TASK_ID} ${SLURM_ARRAY_TASK_ID})
+TARGET=$SM.$TASK.bed
 
 # take two different inputs
 if [[ $BQSR = true ]]; then
@@ -52,13 +48,13 @@ elif [[ $BQSR = false ]]; then
 fi
 
 if [[ $PERFORM = true ]]; then
-    echo -e "$(date) haplotypecaller.sh is running on $(hostname)" &>> $CWD/$SM/metrics/perform_haplotypecaller_$SM_${TARGET%\.intervals}.txt
-    scontrol show jobid -dd ${SLURM_JOB_ID} &>> $CWD/$SM/metrics/perform_haplotypecaller_$SM_${TARGET%\.intervals}.txt
-    echo -e "\n\n\n" &>> $CWD/$SM/metrics/perform_haplotypecaller_$SM_${TARGET%\.intervals}.txt
-    vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_haplotypecaller_$SM_${TARGET%\.intervals}.txt &
+    echo -e "$(date) haplotypecaller.sh is running on $(hostname)" &>> $CWD/$SM/metrics/perform_haplotypecaller_$SM_$TASK.txt
+    scontrol show jobid -dd ${SLURM_JOB_ID} &>> $CWD/$SM/metrics/perform_haplotypecaller_$SM_$TASK.txt
+    echo -e "\n\n\n" &>> $CWD/$SM/metrics/perform_haplotypecaller_$SM_$TASK.txt
+    vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_haplotypecaller_$SM_$TASK.txt &
 fi
 
-echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\thaplotypecaller.sh\t$SM\t${TARGET%\.intervals}" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\thaplotypecaller.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
 
 
 if [[ ! -z $EXOME ]]; then
@@ -70,13 +66,13 @@ java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \
 -ERC GVCF \
 -T HaplotypeCaller \
 -R $REF \
--L ${REF%/*}/target_loci/$TARGET $DOEXOME \
--I $CWD/$SM/bam/$SM.${TARGET%\.intervals}.$inStatus.bam \
--o $CWD/$SM/gvcf/$SM.${TARGET%\.intervals}.g.vcf.gz
+-L $CWD/$SM/tmp/split_range/$TARGET $DOEXOME \
+-I $CWD/$SM/bam/$SM.$TASK.$inStatus.bam \
+-o $CWD/$SM/gvcf/$SM.$TASK.g.vcf.gz
 
-if [[ -s $CWD/$SM/gvcf/$SM.${TARGET%\.intervals}.g.vcf.gz ]]; then
-    echo -e "$(date)\t${SLURM_JOB_ID}\tend\thaplotypecaller.sh\t$SM\t${TARGET%\.intervals}" &>> $CWD/$SM/log/$SM.run.log
+if [[ -s $CWD/$SM/gvcf/$SM.$TASK.g.vcf.gz ]]; then
+    echo -e "$(date)\t${SLURM_JOB_ID}\tend\thaplotypecaller.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\t${SLURM_JOB_ID}\tfail\thaplotypecaller.sh\t$SM\t${TARGET%\.intervals}" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tfail\thaplotypecaller.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
 fi

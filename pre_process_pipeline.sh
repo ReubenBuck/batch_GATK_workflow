@@ -118,11 +118,11 @@ if [[ ! -z $EXOME ]]; then
 fi
 
 # has been replaced by array len
-lociLen=$(ls ${REF%/*}/target_loci | wc -l)
+#lociLen=$(ls ${REF%/*}/target_loci | wc -l)
 
 # this one is read in as a unix array to the programs
 # this will need to be integrated with the split read stuff
-LOCI=$(echo $(ls ${REF%/*}/target_loci) |  sed 's/ /,/g')
+#LOCI=$(echo $(ls ${REF%/*}/target_loci) |  sed 's/ /,/g')
 
 # need to check for partitions
 # and account and email
@@ -297,7 +297,7 @@ CATBAMID=$(sbatch \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/print_reads-${SM}-%A-%a-%j.out \
 $TASKDIR/print_reads.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM \
---loci $LOCI --memrequest ${print_readsMEM} | cut -f 4 -d ' ')
+--memrequest ${print_readsMEM} | cut -f 4 -d ' ')
 
 echo $CATBAMID
 
@@ -336,7 +336,7 @@ sbatch \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/cat_sort_index_bams-${SM}-%j.out \
 $TASKDIR/cat_sort_index_bams.sh --sample $SM \
 --ref $REF --workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads ${cat_sort_index_bamsNTASKS} \
---bqsr $BQSR --memrequest $cat_sort_index_bamsMEM --rversion $RMOD --picard $PICARD
+--bqsr $BQSR --memrequest $cat_sort_index_bamsMEM --rversion $RMOD --picard $PICARD --array-len $ARRAYLEN
 
 
 haplotypecallerMEM=$(cat $MACHINE | grep haplotypecaller | cut -f 2)
@@ -349,7 +349,7 @@ sbatch \
 --job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/haplotypecaller-${SM}-%A-%a-%j.out \
 $TASKDIR/haplotypecaller.sh --sample $SM \
---workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --loci $LOCI --bqsr $BQSR \
+--workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --bqsr $BQSR \
 --perform $PERFORM --threads ${haplotypecallerNTASKS} --memrequest ${haplotypecallerMEM} $EXOME
 
 
@@ -365,7 +365,7 @@ VARCALLID=$(sbatch \
 --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/cat_gvcf-${SM}-%j.out \
 $TASKDIR/cat_gvcf.sh --sample $SM \
---workdir $CWD --picard $PICARD --java $JAVAMOD --ref $REF --loci $LOCI \
+--workdir $CWD --picard $PICARD --java $JAVAMOD --ref $REF --array-len $ARRAYLEN \
 --perform $PERFORM --memrequest ${cat_gvcfMEM} | cut -f 4 -d ' ')
 echo $VARCALLID
 

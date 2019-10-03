@@ -6,10 +6,6 @@ shift; SM=$1
 --picard )
 shift; PICARD=$1
 ;;
---loci )
-shift; LOCI=$1
-IFS=', ' read -r -a LOCIarr <<< "$(echo ,$LOCI)"
-;;
 --java )
 shift; JAVAMOD=$1
 ;;
@@ -28,15 +24,15 @@ shift; CWD=$1
 --memrequest )
 shift; MEM=$1
 ;;
+--array-len )
+shift; ARRAYLEN=$1
+;;
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
-echo $MEM
-
 module load $JAVAMOD
 
-TASK=${SLURM_ARRAY_TASK_ID}
-TARGET=${LOCIarr[$TASK]}
+TASKS=$(echo $(seq -f "%05g" 1 $ARRAYLEN) | sed 's/ /,/g')
 
 # take two different inputs
 if [[ BQSR = true ]]; then
@@ -54,9 +50,7 @@ fi
 
 echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tcat_gvcf.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
-VAR=$(eval echo -e "I=$CWD/$SM/gvcf/$SM.{$(echo $LOCI)}.g.vcf.gz" | sed "s/.intervals//g")
-
-echo ${MEM}
+VAR=$(eval echo -e "I=$CWD/$SM/gvcf/$SM.{$(echo $TASKS)}.g.vcf.gz")
 
 java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $PICARD SortVcf $VAR O=$CWD/$SM/gvcf/$SM.g.vcf.gz
 

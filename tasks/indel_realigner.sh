@@ -42,10 +42,10 @@ TASK=$(seq -f "%05g" ${SLURM_ARRAY_TASK_ID} ${SLURM_ARRAY_TASK_ID})
 TARGET=$SM.$TASK.bed
 
 if [[ $PERFORM = true ]]; then
-    echo -e "$(date): indel_realigner.sh for $TASK is running on $(hostname)" &>> $CWD/$SM/metrics/perform_indel_realigner_$SM_${TARGET%\.intervals}.txt
-    scontrol show jobid -dd ${SLURM_JOB_ID} &>> $CWD/$SM/metrics/perform_indel_realigner_$SM_${TARGET%\.intervals}.txt
-    echo -e "\n\n\n" &>> $CWD/$SM/metrics/perform_indel_realigner_$SM_${TARGET%\.intervals}.txt
-    vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_indel_realigner_$SM_${TARGET%\.intervals}.txt &
+    echo -e "$(date): indel_realigner.sh for $TASK is running on $(hostname)" &>> $CWD/$SM/metrics/perform_indel_realigner_$SM_$TASK.txt
+    scontrol show jobid -dd ${SLURM_JOB_ID} &>> $CWD/$SM/metrics/perform_indel_realigner_$SM_$TASK.txt
+    echo -e "\n\n\n" &>> $CWD/$SM/metrics/perform_indel_realigner_$SM_$TASK.txt
+    vmstat -twn -S m 1 >> $CWD/$SM/metrics/perform_indel_realigner_$SM_$TASK.txt &
 fi
 
 echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tindel_realigner.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
