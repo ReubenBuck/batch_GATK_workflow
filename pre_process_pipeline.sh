@@ -157,7 +157,7 @@ sbatch \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/prepare_reads-${SM}-%A-%a-%j.out \
 $TASKDIR/prepare_reads.sh --sample $SM \
 --read1 $R1 --read2 $R2 --path1 $D1 --path2 $D2 --threads ${prepare_readsNTASKS} \
---workdir $CWD --fastqc $FASTQCMOD --pigz $PIGZMOD \
+--workdir $CWD --pigz $PIGZMOD \
 --samtools $SAMTOOLSMOD --perform $PERFORM \
 
 

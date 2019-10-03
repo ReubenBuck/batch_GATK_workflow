@@ -31,9 +31,6 @@ shift; SAMTOOLSMOD=$1
 --perform )
 shift; PERFORM=$1
 ;;
---fastqc )
-shift; FASTQCMOD=$1
-;;
 --workdir )
 shift; CWD=$1
 ;;
@@ -65,7 +62,6 @@ fi
 
 
 module load $SAMTOOLSMOD
-module load $FASTQCMOD
 module load $PIGZMOD
 
 
