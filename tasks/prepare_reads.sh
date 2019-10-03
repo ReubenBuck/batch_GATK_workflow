@@ -71,7 +71,7 @@ if [[ $D2 = *".bam" ]]; then
 elif [[ $D2 = *".cram" ]]; then
 	echo -e "$(date)\nData is storred in cram format, converting to fastq\n"
 	samtools view -@ $THREADS -b -o $CWD/$SM/tmp/${D2/cram/bam} $D1/$D2 
-	samtools fastq --threads $THREADS -1 $CWD/$SM/fastq/$R1 -2 $FQDIR/$SM/fastq/$R2 $CWD/$SM/tmp/${D2/cram/bam}
+	samtools fastq --threads $THREADS -1 $CWD/$SM/fastq/$R1 -2 $CWD/$SM/fastq/$R2 $CWD/$SM/tmp/${D2/cram/bam}
 else
 	echo -e "$(date)\nData is likely storred as compressed fastq, uncompressing\n"
 	pigz -cd -p $THREADS $D1/$R1.gz > $CWD/$SM/fastq/$R1
