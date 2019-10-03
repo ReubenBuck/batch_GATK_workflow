@@ -59,7 +59,7 @@ java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \
 -L $CWD/$SM/tmp/split_range/$TARGET \
 -o $CWD/$SM/bam/$SM.$TASK.realign.bam
 
-if [[ $(wc -c <$CWD/$SM/bam/$SM.$TEST.realign.bam) -ge 1000 ]]; then
+if [[ $(wc -c <$CWD/$SM/bam/$SM.$TASK.realign.bam) -ge 1000 ]]; then
     echo -e "$(date)\t${SLURM_JOB_ID}\tend\tindel_realigner.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
 else
     echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tindel_realigner.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
