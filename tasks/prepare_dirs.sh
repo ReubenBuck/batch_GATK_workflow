@@ -455,9 +455,9 @@ paste $CWD/$SM/tmp/$SM.gaps.bed <(cat $CWD/$SM/tmp/$SM.gaps.bed |
 bedtools subtract -a $CWD/$SM/tmp/$SM.genome.bed -b $CWD/$SM/tmp/$SM.large.gaps.bed > $CWD/$SM/tmp/$SM.split.bed
 
 if [[ -s $CWD/$SM/tmp/$SM.gaps.bed && -s $CWD/$SM/tmp/$SM.genome.bed && -s $CWD/$SM/tmp/$SM.large.gaps.bed && -s $CWD/$SM/tmp/$SM.split.bed ]]; then
-    echo -e "$(date)\nRef and gap bed files exist"
+    echo -e "$(date)\nRef and gap bed files exist" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
 else
-    echo -e "$(date)\nRef and gap bed files not found, exiting"
+    echo -e "$(date)\nRef and gap bed files not found, exiting" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
     scancel $SM
     scancel -n ${SM}-unmapped
     scancel -n ${SM}-recal-plots
@@ -475,9 +475,9 @@ done
 rm $CWD/$SM/tmp/split_range/tmp.bed
 
 if [[ -s $CWD/$SM/tmp/split_range/$SM.00001.bed ]]; then
-    echo -e "$(date)\nSplit range found"
+    echo -e "$(date)\nSplit range found" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
 else
-    echo -e "$(date)\nFirst split range not found, exiting"
+    echo -e "$(date)\nFirst split range not found, exiting" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
     scancel $SM
     scancel -n ${SM}-unmapped
     scancel -n ${SM}-recal-plots
@@ -492,9 +492,9 @@ bedtools random -seed 1 -n 100 -l 1000000 -g $CWD/$SM/tmp/$SM.bedtools.genome | 
 bedtools random -seed 2 -n 100 -l 1000000 -g $CWD/$SM/tmp/$SM.bedtools.genome | cut -f1-3 | bedtools sort -faidx $CWD/$SM/tmp/$SM.names.txt > $CWD/$SM/tmp/$SM.bqsr.test.bed
 
 if [[ -s $CWD/$SM/tmp/$SM.bqsr.train.bed && -s $CWD/$SM/tmp/$SM.bqsr.test.bed ]]; then
-    echo -e "$(date)\nTrain and test intervals for bqsr exist"
+    echo -e "$(date)\nTrain and test intervals for bqsr exist" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
 else
-    echo -e "$(date)\nTrain and test intervals not found, exiting"
+    echo -e "$(date)\nTrain and test intervals not found, exiting" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
     scancel $SM
     scancel -n ${SM}-unmapped
     scancel -n ${SM}-recal-plots
