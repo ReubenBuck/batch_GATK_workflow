@@ -112,8 +112,10 @@ if [[ ! -z $(ls $CWD/$SM/) ]]; then
         echo "Working dir names are empty, exiting"
         scancel -n $SM
     else
+        echo "Wroking dir needs cleaning ..."
         rm -r $CWD/$SM/*
         mkdir -p $CWD/$SM/log
+        echo "Working dir cleaned"
     fi
     echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tprepare_dirs.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 else
