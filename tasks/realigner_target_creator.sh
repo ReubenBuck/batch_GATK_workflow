@@ -39,7 +39,7 @@ echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\trealigner_target_creator.sh\t$SM\t" &>
 
 # will need to check how this goes, whether the nt command is enough mem per thread may not be the way to go here
 MEMTHREAD=$(( MEM/THREAD ))
-java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \
+java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
 -nt $THREADS \
 -T RealignerTargetCreator \
 -R $REF \

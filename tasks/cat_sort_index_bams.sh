@@ -103,7 +103,7 @@ fi
 
 echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tcat_sort_index_bams.sh-metrics\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
-java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $PICARD CollectMultipleMetrics \
+java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $PICARD CollectMultipleMetrics \
 TMP_DIR=$CWD/$SM/tmp \
 I=$CWD/$SM/bam/$SM.$inStatus.bam \
 O=$CWD/$SM/metrics/$SM.multiple_metrics \

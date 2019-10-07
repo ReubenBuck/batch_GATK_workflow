@@ -56,7 +56,7 @@ else
 fi
 
 
-java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \
+java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
 -nct $THREADS \
 -T BaseRecalibrator \
 -R $REF \
