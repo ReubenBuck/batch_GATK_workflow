@@ -57,7 +57,7 @@ java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
 
 
 if [[ -s $CWD/$SM/bam/$SM.$TASK.recal.bam ]]; then
-    echo -e "$(date)\t${SLURM_JOB_ID}\tend\tprint_read.sh\t$SM\t$TASK}" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tend\tprint_read.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
 else
     echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tprint_read.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
