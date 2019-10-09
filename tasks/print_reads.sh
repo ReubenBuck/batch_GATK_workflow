@@ -46,7 +46,7 @@ fi
 
 echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tprint_read.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
 
-java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \
+java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
 -nct $THREADS \
 -T PrintReads \
 -R $REF \
@@ -57,7 +57,7 @@ java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \
 
 
 if [[ -s $CWD/$SM/bam/$SM.$TASK.recal.bam ]]; then
-    echo -e "$(date)\t${SLURM_JOB_ID}\tend\tprint_read.sh\t$SM\t$TASK}" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tend\tprint_read.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
 else
     echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tprint_read.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM

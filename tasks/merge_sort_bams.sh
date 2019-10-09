@@ -51,7 +51,7 @@ fi
 
 # sort
 echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tmerge_sort_bams.sh-sort\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
-samtools sort --threads $THREADS -m $(( MEM*1000/THREADS ))M -o $CWD/$SM/bam/$SM.sort.bam $CWD/$SM/bam/$SM.bam
+samtools sort --threads $THREADS -m $(( MEM*1000/THREADS/100*95 ))M -o $CWD/$SM/bam/$SM.sort.bam $CWD/$SM/bam/$SM.bam
 
 
 if [[ $(wc -c <$CWD/$SM/bam/$SM.bam) -ge 1000 ]]; then

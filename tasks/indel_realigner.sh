@@ -40,7 +40,7 @@ fi
 
 echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tindel_realigner.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
 
-java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \
+java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
 -T IndelRealigner \
 -R $REF \
 -I $CWD/$SM/bam/$SM.markdup.bam \

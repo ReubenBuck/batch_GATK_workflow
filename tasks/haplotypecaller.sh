@@ -61,7 +61,7 @@ if [[ ! -z $EXOME ]]; then
     DOEXOME=$(echo -e "-L $EXOME -isr INTERSECTION -ip 100")
 fi
 
-java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $GATK \
+java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $GATK \
 -nct $THREADS \
 -ERC GVCF \
 -T HaplotypeCaller \

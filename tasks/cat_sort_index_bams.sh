@@ -72,7 +72,7 @@ fi
 
 echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tcat_sort_index_bams.sh-sort\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
-samtools sort -m $(( MEM*1000/THREADS ))M --threads $THREADS -o $CWD/$SM/bam/$SM.$inStatus.bam $CWD/$SM/bam/$SM.$inStatus.cat.bam
+samtools sort -m $(( MEM*1000/THREADS/100*95 ))M --threads $THREADS -o $CWD/$SM/bam/$SM.$inStatus.bam $CWD/$SM/bam/$SM.$inStatus.cat.bam
 
 if [[ -s $CWD/$SM/bam/$SM.$inStatus.bam ]]; then
     echo -e "$(date)\t${SLURM_JOB_ID}\tend\tcat_sort_index_bams.sh-sort\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
@@ -103,7 +103,7 @@ fi
 
 echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tcat_sort_index_bams.sh-metrics\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
-java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx${MEM}G -jar $PICARD CollectMultipleMetrics \
+java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $PICARD CollectMultipleMetrics \
 TMP_DIR=$CWD/$SM/tmp \
 I=$CWD/$SM/bam/$SM.$inStatus.bam \
 O=$CWD/$SM/metrics/$SM.multiple_metrics \
