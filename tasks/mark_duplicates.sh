@@ -34,7 +34,7 @@ fi
 
 echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tmark_duplicates.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
-java -Djava.io.tmpdir=$CWD/$SM/tmp -jar $PICARD MarkDuplicates \
+java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx$(( MEM*1000/THREADS/100*95 ))M -jar $PICARD MarkDuplicates \
 TMP_DIR=$CWD/$SM/tmp \
 INPUT=$CWD/$SM/bam/$SM.sort.bam \
 OUTPUT=$CWD/$SM/bam/$SM.markdup.bam \
