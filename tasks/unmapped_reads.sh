@@ -15,6 +15,9 @@ shift; CWD=$1
 --threads )
 shift; THREADS=$1
 ;;
+--memrequest )
+shift; MEM=$1
+;;
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
@@ -38,7 +41,7 @@ samtools index -@ $THREADS $CWD/$SM/bam/$SM.unmap.bam
 
 samtools view -@ $THREADS -Sbh -f 4 -F 8 -F 0x900 $CWD/$SM/bam/$SM.markdup.bam > $CWD/$SM/tmp/halfmapped.f4F8.bam
 samtools view -@ $THREADS -Sbh -f 8 -F 4 -F 0x900 $CWD/$SM/bam/$SM.markdup.bam > $CWD/$SM/tmp/halfmapped.f8F4.bam
-samtools cat $CWD/$SM/tmp/halfmapped.{f4F8,f8F4}.bam | samtools sort -@ $THREADS > $CWD/$SM/bam/$SM.halfmap.bam
+samtools cat $CWD/$SM/tmp/halfmapped.{f4F8,f8F4}.bam | samtools sort -m $(( MEM*1000/THREADS/100*95 ))M -@ $THREADS > $CWD/$SM/bam/$SM.halfmap.bam
 
 samtools index -@ $THREADS $CWD/$SM/bam/$SM.halfmap.bam
 
