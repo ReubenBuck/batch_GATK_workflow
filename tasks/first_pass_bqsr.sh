@@ -61,7 +61,7 @@ TASKS=$(echo $(seq -f "%05g" 1 $ARRAYLEN) | sed 's/ /,/g')
 eval ls $CWD/$SM/bam/$SM.{$(echo $TASKS)}.realign.bam > $CWD/$SM/tmp/$SM.bams.list
 
 
-java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx$(( MEM*1000/THREADS/100*95 ))M -jar $GATK \
+java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx$(( MEM*1000/100*95 ))M -jar $GATK \
 	-nct $THREADS \
 	-T BaseRecalibrator \
 	-R $REF \

@@ -193,7 +193,7 @@ sbatch \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/mark_duplicates-${SM}-%j.out \
 $TASKDIR/mark_duplicates.sh --sample $SM \
---workdir $CWD --picard $PICARD --java $JAVAMOD --perform $PERFORM --memrequest ${mark_duplicatesMEM} \
+--workdir $CWD --picard $PICARD --java $JAVAMOD --perform $PERFORM --memrequest ${mark_duplicatesMEM}
 
 
 indexMEM=$(cat $MACHINE | grep -P "^index\t" | cut -f 2)
