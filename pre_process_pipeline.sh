@@ -168,21 +168,30 @@ $TASKDIR/map_reads.sh --sample $SM \
 --flowcell $FC --lane $LN --library $LB --platform $PL --ref $REF \
 
 
-merge_sort_bamsMEM=$(cat $MACHINE | grep merge_sort_bams | cut -f 2)
-merge_sort_bamsTIME=$(cat $MACHINE | grep merge_sort_bams | cut -f 3)
-merge_sort_bamsNTASKS=$(cat $MACHINE | grep merge_sort_bams | cut -f 4)
-# merge_sort_bams
-# for samtools, max mem per task can also be set
-# need to go mem/ntask to calculate
-# all calculation should be in G
+sort_MEM=$(cat $MACHINE | grep "^sort\t" | cut -f 2)
+sort_TIME=$(cat $MACHINE | grep "^sort\t" | cut -f 3)
+sort_NTASKS=$(cat $MACHINE | grep "^sort\t" | cut -f 4)
+# sort
 sbatch \
---mem=${merge_sort_bamsMEM}G --time=${merge_sort_bamsTIME} --nodes=1 --ntasks=${merge_sort_bamsNTASKS} \
+--mem=${sort_MEM}G --time=${sort_TIME} --nodes=1 --ntasks=${sort_NTASKS} --array=1-$runLen \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
---mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/merge_sort_bams-${SM}-%j.out \
-$TASKDIR/merge_sort_bams.sh --sample $SM \
---threads ${merge_sort_bamsNTASKS} --runLen $runLen --memrequest ${merge_sort_bamsMEM} \
+--mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/sort-${SM}-%A-%a-%j.out \
+$TASKDIR/sort.sh --sample $SM \
+--threads ${sort_NTASKS} --memrequest ${sort_MEM} \
 --workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM \
 
+
+merge_MEM=$(cat $MACHINE | grep "^merge\t" | cut -f 2)
+merge_TIME=$(cat $MACHINE | grep "^merge\t" | cut -f 3)
+merge_NTASKS=$(cat $MACHINE | grep "^merge\t" | cut -f 4)
+# merge
+sbatch \
+--mem=${merge_MEM}G --time=${merge_TIME} --nodes=1 --ntasks=${merge_NTASKS} \
+--job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
+--mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/merge-${SM}-%j.out \
+$TASKDIR/merge.sh --sample $SM \
+--threads ${merge_NTASKS} --runLen $runLen \
+--workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM \
 
 mark_duplicatesMEM=$(cat $MACHINE | grep mark_duplicates | cut -f 2)
 mark_duplicatesTIME=$(cat $MACHINE | grep mark_duplicates | cut -f 3)

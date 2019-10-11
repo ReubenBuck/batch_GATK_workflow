@@ -81,6 +81,7 @@ echo $RG
 	
 (bwa mem -M -R $RG -t $THREADS $REF $CWD/$SM/fastq/$R1 $CWD/$SM/fastq/$R2 | samtools view -Sb - > $CWD/$SM/bam/$SM.$TASK.bam) 
 
+
 if [[ $(wc -c <$CWD/$SM/bam/$SM.$TASK.bam) -ge 1000 ]]; then
 	samtools flagstat -@ $THREADS $CWD/$SM/bam/$SM.$TASK.bam &>> $CWD/$SM/metrics/$SM.$TASK.flagstat.txt
 	echo -e "$(date)\t${SLURM_JOB_ID}\tend\tmap_reads.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
