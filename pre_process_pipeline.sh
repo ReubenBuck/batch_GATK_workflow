@@ -168,9 +168,9 @@ $TASKDIR/map_reads.sh --sample $SM \
 --flowcell $FC --lane $LN --library $LB --platform $PL --ref $REF \
 
 
-sort_MEM=$(cat $MACHINE | grep "^sort\t" | cut -f 2)
-sort_TIME=$(cat $MACHINE | grep "^sort\t" | cut -f 3)
-sort_NTASKS=$(cat $MACHINE | grep "^sort\t" | cut -f 4)
+sort_MEM=$(cat $MACHINE | grep -P "^sort\t" | cut -f 2)
+sort_TIME=$(cat $MACHINE | grep -P "^sort\t" | cut -f 3)
+sort_NTASKS=$(cat $MACHINE | grep -P "^sort\t" | cut -f 4)
 # sort
 sbatch \
 --mem=${sort_MEM}G --time=${sort_TIME} --nodes=1 --ntasks=${sort_NTASKS} --array=1-$runLen \
@@ -181,9 +181,9 @@ $TASKDIR/sort.sh --sample $SM \
 --workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM \
 
 
-merge_MEM=$(cat $MACHINE | grep "^merge\t" | cut -f 2)
-merge_TIME=$(cat $MACHINE | grep "^merge\t" | cut -f 3)
-merge_NTASKS=$(cat $MACHINE | grep "^merge\t" | cut -f 4)
+merge_MEM=$(cat $MACHINE | grep -P "^merge\t" | cut -f 2)
+merge_TIME=$(cat $MACHINE | grep -P "^merge\t" | cut -f 3)
+merge_NTASKS=$(cat $MACHINE | grep -P "^merge\t" | cut -f 4)
 # merge
 sbatch \
 --mem=${merge_MEM}G --time=${merge_TIME} --nodes=1 --ntasks=${merge_NTASKS} \
