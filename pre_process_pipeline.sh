@@ -227,8 +227,8 @@ sbatch \
 --mem=${unmapped_readsMEM}G --time=${unmapped_readsTIME} --nodes=1 --ntasks=${unmapped_readsNTASKS} \
 --job-name=${SM}-unmapped --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d afterok:$IDXJOB \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/unmapped_reads-${SM}-%j.out \
-$TASKDIR/unmapped_reads.sh --sample $SM --memrequest ${unmapped_reads_MEM} \
---workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads ${unmapped_readsNTASKS} \
+$TASKDIR/unmapped_reads.sh --sample $SM --memrequest ${unmapped_readsMEM} \
+--workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads ${unmapped_readsNTASKS}
 
 
 realigner_target_creatorMEM=$(cat $MACHINE | grep realigner_target_creator | cut -f 2)
