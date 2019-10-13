@@ -5,7 +5,7 @@ PERFORM=false
 GAPSIZE=100
 ARRAYLEN=10
 
-SAMTOOLSMOD=samtools/samtools-1.9
+SAMTOOLSMOD=samtools/samtools-1.9-test
 GATK=/cluster/software/gatk/gatk-3.8/GenomeAnalysisTK.jar
 PICARD=/cluster/software/picard-tools/picard-tools-2.1.1/picard.jar
 JAVAMOD=java/openjdk/java-1.8.0-openjdk
