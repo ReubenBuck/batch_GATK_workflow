@@ -118,133 +118,133 @@ if [[ ! -z $EXOME ]]; then
 fi
 
 
-prepare_dirsMEM=$(cat $MACHINE | grep prepare_dirs | cut -f 2)
-prepare_dirsTIME=$(cat $MACHINE | grep prepare_dirs | cut -f 3)
-prepare_dirsNTASKS=$(cat $MACHINE | grep prepare_dirs | cut -f 4)
-# prepare dirs
-sbatch \
---mem=${prepare_dirsMEM}G --time=${prepare_dirsTIME} --nodes=1 --ntasks=${prepare_dirsNTASKS} \
---job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
---mail-user=$EMAIL --mail-type=FAIL,BEGIN --output=prepare_dirs-${SM}-%j.out \
-$TASKDIR/prepare_dirs.sh --sample $SM \
---platform $PL --flowcell $FC --lane $LN --library $LB \
---read1 $R1 --read2 $R2 --path1 $D1 --path2 $D2 \
---ref $REF --workdir $CWD --recal $RECAL --bam $BAM \
---gvcf $GVCF --metrics $METRICS --log $LOG \
---bwa $BWAMOD --pigz $PIGZMOD --java $JAVAMOD \
---samtools $SAMTOOLSMOD --gatk $GATK --picard $PICARD \
---runLen $runLen --perform $PERFORM --bqsr $BQSR --taskdir $TASKDIR \
---rversion $RMOD --bedtools $BEDTOOLSMOD --array-len $ARRAYLEN --gap-size $GAPSIZE
-
-prepare_readsMEM=$(cat $MACHINE | grep prepare_reads | cut -f 2)
-prepare_readsTIME=$(cat $MACHINE | grep prepare_reads | cut -f 3)
-prepare_readsNTASKS=$(cat $MACHINE | grep prepare_reads | cut -f 4)
-# prepare reads
-# this may use some samtools options
-sbatch \
---mem=${prepare_readsMEM}G --time=${prepare_readsTIME} --nodes=1 --ntasks=${prepare_readsNTASKS} \
---array=1-$runLen \
---job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
---mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/prepare_reads-${SM}-%A-%a-%j.out \
-$TASKDIR/prepare_reads.sh --sample $SM \
---read1 $R1 --read2 $R2 --path1 $D1 --path2 $D2 --threads ${prepare_readsNTASKS} \
---workdir $CWD --pigz $PIGZMOD \
---samtools $SAMTOOLSMOD --perform $PERFORM \
-
-
-map_readsMEM=$(cat $MACHINE | grep map_reads | cut -f 2)
-map_readsTIME=$(cat $MACHINE | grep map_reads | cut -f 3)
-map_readsNTASKS=$(cat $MACHINE | grep map_reads | cut -f 4)
-# Map reads
-# bwa does not offer mem usage options but scales proportinally with threads
-sbatch \
---mem=${map_readsMEM}G --time=${map_readsTIME} --nodes=1 --ntasks=${map_readsNTASKS} \
---array=1-$runLen --job-name=$SM --account=$ACCOUNT \
---partition=$PARTITION $EXCLUSIVE -d singleton \
---mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/map_reads-${SM}-%A-%a-%j.out \
-$TASKDIR/map_reads.sh --sample $SM \
---read1 $R1 --read2 $R2 --threads ${map_readsNTASKS} \
---workdir $CWD --bwa $BWAMOD --samtools $SAMTOOLSMOD --perform $PERFORM \
---flowcell $FC --lane $LN --library $LB --platform $PL --ref $REF \
-
-
-sort_MEM=$(cat $MACHINE | grep -P "^sort\t" | cut -f 2)
-sort_TIME=$(cat $MACHINE | grep -P "^sort\t" | cut -f 3)
-sort_NTASKS=$(cat $MACHINE | grep -P "^sort\t" | cut -f 4)
-# sort
-sbatch \
---mem=${sort_MEM}G --time=${sort_TIME} --nodes=1 --ntasks=${sort_NTASKS} --array=1-$runLen \
---job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
---mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/sort-${SM}-%A-%a-%j.out \
-$TASKDIR/sort.sh --sample $SM \
---threads ${sort_NTASKS} --memrequest ${sort_MEM} \
---workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM \
-
-
-merge_MEM=$(cat $MACHINE | grep -P "^merge\t" | cut -f 2)
-merge_TIME=$(cat $MACHINE | grep -P "^merge\t" | cut -f 3)
-merge_NTASKS=$(cat $MACHINE | grep -P "^merge\t" | cut -f 4)
-# merge
-sbatch \
---mem=${merge_MEM}G --time=${merge_TIME} --nodes=1 --ntasks=${merge_NTASKS} \
---job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
---mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/merge-${SM}-%j.out \
-$TASKDIR/merge.sh --sample $SM \
---threads ${merge_NTASKS} --runLen $runLen \
---workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM \
-
-mark_duplicatesMEM=$(cat $MACHINE | grep mark_duplicates | cut -f 2)
-mark_duplicatesTIME=$(cat $MACHINE | grep mark_duplicates | cut -f 3)
-mark_duplicatesNTASKS=$(cat $MACHINE | grep mark_duplicates | cut -f 4)
-# mark_duplicates.sh
-sbatch \
---mem=${mark_duplicatesMEM}G --time=${mark_duplicatesTIME} --nodes=1 --ntasks=${mark_duplicatesNTASKS} \
---job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
---mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/mark_duplicates-${SM}-%j.out \
-$TASKDIR/mark_duplicates.sh --sample $SM \
---workdir $CWD --picard $PICARD --java $JAVAMOD --perform $PERFORM --memrequest ${mark_duplicatesMEM}
-
-
-indexMEM=$(cat $MACHINE | grep -P "^index\t" | cut -f 2)
-indexTIME=$(cat $MACHINE | grep -P "^index\t" | cut -f 3)
-indexNTASKS=$(cat $MACHINE | grep -P "^index\t" | cut -f 4)
-# index.sh
-IDXJOB=$(sbatch \
---mem=${indexMEM}G --time=${indexTIME} --nodes=1 --ntasks=${indexNTASKS} \
---job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
---mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/index-${SM}-%j.out \
-$TASKDIR/index.sh --sample $SM \
---workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads ${indexNTASKS} | cut -f 4 -d ' ')
-
-echo $IDXJOB
-
-
-unmapped_readsMEM=$(cat $MACHINE | grep unmapped_reads | cut -f 2)
-unmapped_readsTIME=$(cat $MACHINE | grep unmapped_reads | cut -f 3)
-unmapped_readsNTASKS=$(cat $MACHINE | grep unmapped_reads | cut -f 4)
-# unmapped_reads.sh
-sbatch \
---mem=${unmapped_readsMEM}G --time=${unmapped_readsTIME} --nodes=1 --ntasks=${unmapped_readsNTASKS} \
---job-name=${SM}-unmapped --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d afterok:$IDXJOB \
---mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/unmapped_reads-${SM}-%j.out \
-$TASKDIR/unmapped_reads.sh --sample $SM --memrequest ${unmapped_readsMEM} \
---workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads ${unmapped_readsNTASKS}
-
-
-realigner_target_creatorMEM=$(cat $MACHINE | grep realigner_target_creator | cut -f 2)
-realigner_target_creatorTIME=$(cat $MACHINE | grep realigner_target_creator | cut -f 3)
-realigner_target_creatorNTASKS=$(cat $MACHINE | grep realigner_target_creator | cut -f 4)
-# realigner_target_creator
-# need to check nt and nct defs to determine how to set max mem usage for java 
-sbatch \
---mem=${realigner_target_creatorMEM}G --time=${realigner_target_creatorTIME} --nodes=1 \
---ntasks=${realigner_target_creatorNTASKS} \
---job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
---mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/realigner_target_creator-${SM}-%j.out \
-$TASKDIR/realigner_target_creator.sh --sample $SM \
---workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM \
---threads ${realigner_target_creatorNTASKS} --memrequest ${realigner_target_creatorMEM}
-
+#prepare_dirsMEM=$(cat $MACHINE | grep prepare_dirs | cut -f 2)
+#prepare_dirsTIME=$(cat $MACHINE | grep prepare_dirs | cut -f 3)
+#prepare_dirsNTASKS=$(cat $MACHINE | grep prepare_dirs | cut -f 4)
+## prepare dirs
+#sbatch \
+#--mem=${prepare_dirsMEM}G --time=${prepare_dirsTIME} --nodes=1 --ntasks=${prepare_dirsNTASKS} \
+#--job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
+#--mail-user=$EMAIL --mail-type=FAIL,BEGIN --output=prepare_dirs-${SM}-%j.out \
+#$TASKDIR/prepare_dirs.sh --sample $SM \
+#--platform $PL --flowcell $FC --lane $LN --library $LB \
+#--read1 $R1 --read2 $R2 --path1 $D1 --path2 $D2 \
+#--ref $REF --workdir $CWD --recal $RECAL --bam $BAM \
+#--gvcf $GVCF --metrics $METRICS --log $LOG \
+#--bwa $BWAMOD --pigz $PIGZMOD --java $JAVAMOD \
+#--samtools $SAMTOOLSMOD --gatk $GATK --picard $PICARD \
+#--runLen $runLen --perform $PERFORM --bqsr $BQSR --taskdir $TASKDIR \
+#--rversion $RMOD --bedtools $BEDTOOLSMOD --array-len $ARRAYLEN --gap-size $GAPSIZE
+#
+#prepare_readsMEM=$(cat $MACHINE | grep prepare_reads | cut -f 2)
+#prepare_readsTIME=$(cat $MACHINE | grep prepare_reads | cut -f 3)
+#prepare_readsNTASKS=$(cat $MACHINE | grep prepare_reads | cut -f 4)
+## prepare reads
+## this may use some samtools options
+#sbatch \
+#--mem=${prepare_readsMEM}G --time=${prepare_readsTIME} --nodes=1 --ntasks=${prepare_readsNTASKS} \
+#--array=1-$runLen \
+#--job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
+#--mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/prepare_reads-${SM}-%A-%a-%j.out \
+#$TASKDIR/prepare_reads.sh --sample $SM \
+#--read1 $R1 --read2 $R2 --path1 $D1 --path2 $D2 --threads ${prepare_readsNTASKS} \
+#--workdir $CWD --pigz $PIGZMOD \
+#--samtools $SAMTOOLSMOD --perform $PERFORM \
+#
+#
+#map_readsMEM=$(cat $MACHINE | grep map_reads | cut -f 2)
+#map_readsTIME=$(cat $MACHINE | grep map_reads | cut -f 3)
+#map_readsNTASKS=$(cat $MACHINE | grep map_reads | cut -f 4)
+## Map reads
+## bwa does not offer mem usage options but scales proportinally with threads
+#sbatch \
+#--mem=${map_readsMEM}G --time=${map_readsTIME} --nodes=1 --ntasks=${map_readsNTASKS} \
+#--array=1-$runLen --job-name=$SM --account=$ACCOUNT \
+#--partition=$PARTITION $EXCLUSIVE -d singleton \
+#--mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/map_reads-${SM}-%A-%a-%j.out \
+#$TASKDIR/map_reads.sh --sample $SM \
+#--read1 $R1 --read2 $R2 --threads ${map_readsNTASKS} \
+#--workdir $CWD --bwa $BWAMOD --samtools $SAMTOOLSMOD --perform $PERFORM \
+#--flowcell $FC --lane $LN --library $LB --platform $PL --ref $REF \
+#
+#
+#sort_MEM=$(cat $MACHINE | grep -P "^sort\t" | cut -f 2)
+#sort_TIME=$(cat $MACHINE | grep -P "^sort\t" | cut -f 3)
+#sort_NTASKS=$(cat $MACHINE | grep -P "^sort\t" | cut -f 4)
+## sort
+#sbatch \
+#--mem=${sort_MEM}G --time=${sort_TIME} --nodes=1 --ntasks=${sort_NTASKS} --array=1-$runLen \
+#--job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
+#--mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/sort-${SM}-%A-%a-%j.out \
+#$TASKDIR/sort.sh --sample $SM \
+#--threads ${sort_NTASKS} --memrequest ${sort_MEM} \
+#--workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM \
+#
+#
+#merge_MEM=$(cat $MACHINE | grep -P "^merge\t" | cut -f 2)
+#merge_TIME=$(cat $MACHINE | grep -P "^merge\t" | cut -f 3)
+#merge_NTASKS=$(cat $MACHINE | grep -P "^merge\t" | cut -f 4)
+## merge
+#sbatch \
+#--mem=${merge_MEM}G --time=${merge_TIME} --nodes=1 --ntasks=${merge_NTASKS} \
+#--job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
+#--mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/merge-${SM}-%j.out \
+#$TASKDIR/merge.sh --sample $SM \
+#--threads ${merge_NTASKS} --runLen $runLen \
+#--workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM \
+#
+#mark_duplicatesMEM=$(cat $MACHINE | grep mark_duplicates | cut -f 2)
+#mark_duplicatesTIME=$(cat $MACHINE | grep mark_duplicates | cut -f 3)
+#mark_duplicatesNTASKS=$(cat $MACHINE | grep mark_duplicates | cut -f 4)
+## mark_duplicates.sh
+#sbatch \
+#--mem=${mark_duplicatesMEM}G --time=${mark_duplicatesTIME} --nodes=1 --ntasks=${mark_duplicatesNTASKS} \
+#--job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
+#--mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/mark_duplicates-${SM}-%j.out \
+#$TASKDIR/mark_duplicates.sh --sample $SM \
+#--workdir $CWD --picard $PICARD --java $JAVAMOD --perform $PERFORM --memrequest ${mark_duplicatesMEM}
+#
+#
+#indexMEM=$(cat $MACHINE | grep -P "^index\t" | cut -f 2)
+#indexTIME=$(cat $MACHINE | grep -P "^index\t" | cut -f 3)
+#indexNTASKS=$(cat $MACHINE | grep -P "^index\t" | cut -f 4)
+## index.sh
+#IDXJOB=$(sbatch \
+#--mem=${indexMEM}G --time=${indexTIME} --nodes=1 --ntasks=${indexNTASKS} \
+#--job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
+#--mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/index-${SM}-%j.out \
+#$TASKDIR/index.sh --sample $SM \
+#--workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads ${indexNTASKS} | cut -f 4 -d ' ')
+#
+#echo $IDXJOB
+#
+#
+#unmapped_readsMEM=$(cat $MACHINE | grep unmapped_reads | cut -f 2)
+#unmapped_readsTIME=$(cat $MACHINE | grep unmapped_reads | cut -f 3)
+#unmapped_readsNTASKS=$(cat $MACHINE | grep unmapped_reads | cut -f 4)
+## unmapped_reads.sh
+#sbatch \
+#--mem=${unmapped_readsMEM}G --time=${unmapped_readsTIME} --nodes=1 --ntasks=${unmapped_readsNTASKS} \
+#--job-name=${SM}-unmapped --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d afterok:$IDXJOB \
+#--mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/unmapped_reads-${SM}-%j.out \
+#$TASKDIR/unmapped_reads.sh --sample $SM --memrequest ${unmapped_readsMEM} \
+#--workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads ${unmapped_readsNTASKS}
+#
+#
+#realigner_target_creatorMEM=$(cat $MACHINE | grep realigner_target_creator | cut -f 2)
+#realigner_target_creatorTIME=$(cat $MACHINE | grep realigner_target_creator | cut -f 3)
+#realigner_target_creatorNTASKS=$(cat $MACHINE | grep realigner_target_creator | cut -f 4)
+## realigner_target_creator
+## need to check nt and nct defs to determine how to set max mem usage for java 
+#sbatch \
+#--mem=${realigner_target_creatorMEM}G --time=${realigner_target_creatorTIME} --nodes=1 \
+#--ntasks=${realigner_target_creatorNTASKS} \
+#--job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
+#--mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/realigner_target_creator-${SM}-%j.out \
+#$TASKDIR/realigner_target_creator.sh --sample $SM \
+#--workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM \
+#--threads ${realigner_target_creatorNTASKS} --memrequest ${realigner_target_creatorMEM}
+#
 #indel realignment
 indel_realignerMEM=$(cat $MACHINE | grep indel_realigner | cut -f 2)
 indel_realignerTIME=$(cat $MACHINE | grep indel_realigner | cut -f 3)
