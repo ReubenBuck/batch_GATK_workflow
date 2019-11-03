@@ -53,8 +53,8 @@ java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx$(( MEM*1000/100*95 ))M -jar $GATK \
 -L $CWD/$SM/tmp/split_range/$TARGET \
 -I $CWD/$SM/bam/$SM.$TASK.realign.bam \
 -BQSR $CWD/$SM/metrics/$SM.recal_data.table \
--o $CWD/$SM/bam/$SM.$TASK.recal.bam
-
+-o $CWD/$SM/bam/$SM.$TASK.recal.bam \
+-jdk_deflater -jdk_inflater
 
 if [[ -s $CWD/$SM/bam/$SM.$TASK.recal.bam ]]; then
     echo -e "$(date)\t${SLURM_JOB_ID}\tend\tprint_read.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log

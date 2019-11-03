@@ -245,21 +245,21 @@ fi
 #--workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM \
 #--threads ${realigner_target_creatorNTASKS} --memrequest ${realigner_target_creatorMEM}
 #
-#indel realignment
-indel_realignerMEM=$(cat $MACHINE | grep indel_realigner | cut -f 2)
-indel_realignerTIME=$(cat $MACHINE | grep indel_realigner | cut -f 3)
-indel_realignerNTASKS=$(cat $MACHINE | grep indel_realigner | cut -f 4)
-# needs a job id for cat_sort_index_bams.sh
-CATBAMID=$(sbatch \
---mem=${indel_realignerMEM}G --time=${indel_realignerTIME} --nodes=1 --ntasks=${indel_realignerNTASKS} \
---array=1-$ARRAYLEN \
---job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
---mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/indel_realigner-${TASKS}-%A-%a-%j.out \
-$TASKDIR/indel_realigner.sh --sample $SM \
---workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM \
---memrequest ${indel_realignerMEM} | cut -f 4 -d ' ')
-
-echo $CATBAMID
+##indel realignment
+#indel_realignerMEM=$(cat $MACHINE | grep indel_realigner | cut -f 2)
+#indel_realignerTIME=$(cat $MACHINE | grep indel_realigner | cut -f 3)
+#indel_realignerNTASKS=$(cat $MACHINE | grep indel_realigner | cut -f 4)
+## needs a job id for cat_sort_index_bams.sh
+#CATBAMID=$(sbatch \
+#--mem=${indel_realignerMEM}G --time=${indel_realignerTIME} --nodes=1 --ntasks=${indel_realignerNTASKS} \
+#--array=1-$ARRAYLEN \
+#--job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
+#--mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/indel_realigner-${TASKS}-%A-%a-%j.out \
+#$TASKDIR/indel_realigner.sh --sample $SM \
+#--workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM \
+#--memrequest ${indel_realignerMEM} | cut -f 4 -d ' ')
+#
+#echo $CATBAMID
 
 if [[ $BQSR = true ]]; then
 CATBAMID=""
