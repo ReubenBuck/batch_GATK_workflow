@@ -68,7 +68,8 @@ java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx$(( MEM*1000/100*95 ))M -jar $GATK \
 -R $REF \
 -L $CWD/$SM/tmp/split_range/$TARGET $DOEXOME \
 -I $CWD/$SM/bam/$SM.$TASK.$inStatus.bam \
--o $CWD/$SM/gvcf/$SM.$TASK.g.vcf.gz
+-o $CWD/$SM/gvcf/$SM.$TASK.g.vcf.gz \
+-jdk_deflater -jdk_inflater
 
 if [[ -s $CWD/$SM/gvcf/$SM.$TASK.g.vcf.gz ]]; then
     echo -e "$(date)\t${SLURM_JOB_ID}\tend\thaplotypecaller.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
