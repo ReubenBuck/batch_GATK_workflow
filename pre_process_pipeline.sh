@@ -5,7 +5,7 @@ PERFORM=false
 GAPSIZE=100
 ARRAYLEN=10
 
-SAMTOOLSMOD=samtools/samtools-1.9
+SAMTOOLSMOD=samtools/samtools-1.9-test
 GATK=/cluster/software/gatk/gatk-3.8/GenomeAnalysisTK.jar
 PICARD=/cluster/software/picard-tools/picard-tools-2.1.1/picard.jar
 JAVAMOD=java/openjdk/java-1.8.0-openjdk
@@ -168,21 +168,30 @@ $TASKDIR/map_reads.sh --sample $SM \
 --flowcell $FC --lane $LN --library $LB --platform $PL --ref $REF \
 
 
-merge_sort_bamsMEM=$(cat $MACHINE | grep merge_sort_bams | cut -f 2)
-merge_sort_bamsTIME=$(cat $MACHINE | grep merge_sort_bams | cut -f 3)
-merge_sort_bamsNTASKS=$(cat $MACHINE | grep merge_sort_bams | cut -f 4)
-# merge_sort_bams
-# for samtools, max mem per task can also be set
-# need to go mem/ntask to calculate
-# all calculation should be in G
+sort_MEM=$(cat $MACHINE | grep -P "^sort\t" | cut -f 2)
+sort_TIME=$(cat $MACHINE | grep -P "^sort\t" | cut -f 3)
+sort_NTASKS=$(cat $MACHINE | grep -P "^sort\t" | cut -f 4)
+# sort
 sbatch \
---mem=${merge_sort_bamsMEM}G --time=${merge_sort_bamsTIME} --nodes=1 --ntasks=${merge_sort_bamsNTASKS} \
+--mem=${sort_MEM}G --time=${sort_TIME} --nodes=1 --ntasks=${sort_NTASKS} --array=1-$runLen \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
---mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/merge_sort_bams-${SM}-%j.out \
-$TASKDIR/merge_sort_bams.sh --sample $SM \
---threads ${merge_sort_bamsNTASKS} --runLen $runLen --memrequest ${merge_sort_bamsMEM} \
+--mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/sort-${SM}-%A-%a-%j.out \
+$TASKDIR/sort.sh --sample $SM \
+--threads ${sort_NTASKS} --memrequest ${sort_MEM} \
 --workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM \
 
+
+merge_MEM=$(cat $MACHINE | grep -P "^merge\t" | cut -f 2)
+merge_TIME=$(cat $MACHINE | grep -P "^merge\t" | cut -f 3)
+merge_NTASKS=$(cat $MACHINE | grep -P "^merge\t" | cut -f 4)
+# merge
+sbatch \
+--mem=${merge_MEM}G --time=${merge_TIME} --nodes=1 --ntasks=${merge_NTASKS} \
+--job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
+--mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/merge-${SM}-%j.out \
+$TASKDIR/merge.sh --sample $SM \
+--threads ${merge_NTASKS} --runLen $runLen \
+--workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM \
 
 mark_duplicatesMEM=$(cat $MACHINE | grep mark_duplicates | cut -f 2)
 mark_duplicatesTIME=$(cat $MACHINE | grep mark_duplicates | cut -f 3)
@@ -193,7 +202,7 @@ sbatch \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/mark_duplicates-${SM}-%j.out \
 $TASKDIR/mark_duplicates.sh --sample $SM \
---workdir $CWD --picard $PICARD --java $JAVAMOD --perform $PERFORM --memrequest ${mark_duplicatesMEM} \
+--workdir $CWD --picard $PICARD --java $JAVAMOD --perform $PERFORM --memrequest ${mark_duplicatesMEM}
 
 
 indexMEM=$(cat $MACHINE | grep -P "^index\t" | cut -f 2)
@@ -218,8 +227,8 @@ sbatch \
 --mem=${unmapped_readsMEM}G --time=${unmapped_readsTIME} --nodes=1 --ntasks=${unmapped_readsNTASKS} \
 --job-name=${SM}-unmapped --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d afterok:$IDXJOB \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/unmapped_reads-${SM}-%j.out \
-$TASKDIR/unmapped_reads.sh --sample $SM \
---workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads ${unmapped_readsNTASKS} \
+$TASKDIR/unmapped_reads.sh --sample $SM --memrequest ${unmapped_readsMEM} \
+--workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads ${unmapped_readsNTASKS}
 
 
 realigner_target_creatorMEM=$(cat $MACHINE | grep realigner_target_creator | cut -f 2)
@@ -245,7 +254,7 @@ CATBAMID=$(sbatch \
 --mem=${indel_realignerMEM}G --time=${indel_realignerTIME} --nodes=1 --ntasks=${indel_realignerNTASKS} \
 --array=1-$ARRAYLEN \
 --job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
---mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/indel_realigner-${TASKS}-%A-%a-%j.out \
+--mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/indel_realigner-${SM}-%A-%a-%j.out \
 $TASKDIR/indel_realigner.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM \
 --memrequest ${indel_realignerMEM} | cut -f 4 -d ' ')
