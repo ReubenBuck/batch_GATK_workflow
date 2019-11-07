@@ -321,14 +321,15 @@ cat_sort_index_bamsNTASKS=$(cat $MACHINE | grep cat_sort_index_bams | cut -f 4)
 # needs to take two alternative jobIDs, no we can just overwrite the variable if bqsr is true
 # push the output to final destination
 # then get an md5sum
-sbatch \
+FINISHBAMID=$(sbatch \
 --mem=${cat_sort_index_bamsMEM}G --time=${cat_sort_index_bamsTIME} --nodes=1 \
 --ntasks=${cat_sort_index_bamsNTASKS} \
 --job-name=${SM}-cat-bams --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d afterok:$CATBAMID \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/cat_sort_index_bams-${SM}-%j.out \
 $TASKDIR/cat_sort_index_bams.sh --sample $SM \
 --ref $REF --workdir $CWD --samtools $SAMTOOLSMOD --perform $PERFORM --threads ${cat_sort_index_bamsNTASKS} \
---bqsr $BQSR --memrequest $cat_sort_index_bamsMEM --rversion $RMOD --picard $PICARD --array-len $ARRAYLEN
+--bqsr $BQSR --memrequest $cat_sort_index_bamsMEM --rversion $RMOD \
+--picard $PICARD --array-len $ARRAYLEN | cut -f 4 -d ' ')
 
 
 haplotypecallerMEM=$(cat $MACHINE | grep haplotypecaller | cut -f 2)
@@ -371,7 +372,7 @@ if [[ $BQSR = true ]]; then
 
 FINALID=$(sbatch \
 --mem=${cp_filesMEM}G --time=${cp_filesTIME} --nodes=1 --ntasks=${cp_filesNTASKS} \
--d afterok:${VARCALLID}:${SECONDBQSRID} --job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
+-d afterok:${VARCALLID}:${SECONDBQSRID}:${FINISHBAMID} --job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/cp_files-${SM}-%j.out \
 $TASKDIR/cp_files.sh --sample $SM \
 --workdir $CWD --bam $BAM --metrics $METRICS --log $LOG --gvcf $GVCF --bqsr $BQSR | cut -f 4 -d ' ')
@@ -380,7 +381,7 @@ else
 
 FINALID=$(sbatch \
 --mem=${cp_filesMEM}G --time=${cp_filesTIME} --nodes=1 --ntasks=${cp_filesNTASKS} \
--d afterok:${VARCALLID} --job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
+-d afterok:${VARCALLID}:${FINISHBAMID} --job-name=${SM} --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/cp_files-${SM}-%j.out \
 $TASKDIR/cp_files.sh --sample $SM \
 --workdir $CWD --bam $BAM --metrics $METRICS --log $LOG --gvcf $GVCF --bqsr $BQSR | cut -f 4 -d ' ')

@@ -43,8 +43,7 @@ printf "$i%.0s\n" $(seq 1 $LINES) > $CWD/$SM/tmp/jobid.txt
 paste $CWD/$SM/tmp/jobid.txt $CWD/$SM/tmp/jobspec.txt &>> $CWD/$SM/metrics/$SM.eff.tsv
 done
 
-
-echo -e "$(date)\tbegin\tcp_files.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tcp_files.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
 # update permissions if old files exist
 if [[ -e $BAM/$SM.bam ]]; then
@@ -106,10 +105,10 @@ wait
 
 # make sure all checks passed
 if [[ $(grep "OK" $CWD/$SM/log/$SM.final.check.txt | wc -l) = 4 ]]; then
-	echo -e "$(date)\tend\tcp_files.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+	echo -e "$(date)\t${SLURM_JOB_ID}\tend\tcp_files.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 	chmod ugo-w $BAM/$SM.* $GVCF/$SM.*
 else
-	echo -e "$(date)\tfail\tcp_files.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+	echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tcp_files.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 	rm $BAM/$SM.* $GVCF/$SM.*
 	scancel $SM
 	sleep 10s
