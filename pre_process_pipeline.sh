@@ -14,22 +14,139 @@ BWAMOD=bwa/bwa-0.7.17
 RMOD=R/R-3.3.3
 BEDTOOLSMOD=bedtools/bedtools-2.26.0
 
+bold=$(tput bold)
+normal=$(tput sgr0)
+
 # need to read in the config file! 
 while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
 -h | --help )
-echo "check everything is ok" 
+echo echo "
+pre_process_pipeline.sh runs GATK version 3 for germline variants in WGS and WES data.
+	${bold}-a, --account${normal}=[STRING]
+		Slurm account to for pipeline to use
+
+	${bold}-A, --array-len${normal}=[INTEGER]
+		Integer value for size of array to use for dividing jobs, 10 is the default
+
+	${bold}-b, --bam${normal}=[STRING]
+		Directory of where to place final bam output
+
+	${bold}-c, --config${normal}=[STRING]
+		Config file for individual cat. Tab seperated file must contain a header with the following
+		columns:
+			
+			Sample: Sample name
+			Library: Library ID
+			Platform: Sequencing platform, eg. ILLUMINA
+			Flowcell: Flowcell ID
+			Lane: Lane number
+			R1: Read one name without .gz file extension
+			R2: Read two name without .gz file extension
+			D1: Directory for where to find read one file / Directory for where to find uBAM
+			D2: Directory for where to find read two file / Filename of uBAM
+
+	${bold}-C, --cwd${normal}=[STRING]
+		Working directory for where to process sample. Preferably somewhere in /storage/hpc.
+
+	${bold}-e, --email${normal}=[STRING]
+		Email address for where to direct slurm emails.
+
+	${bold}-E, --exomes${normal}=[STRING]
+		Full path to bed file containing exonic intervals to be used in WES analysis.
+
+	${bold}-g, --gvcf${normal}=[STRING]
+		Directory of where to place final gvcf output.
+
+	${bold}-G, --gap-size${normal}=[INTEGER]
+		Integer value for minimum bp size of gap region for dividing genome into segements, 
+		default is 100.
+
+	${bold}-l, --log${normal}=[STRING]
+		Directory of where to place final log output.
+
+	${bold}-m, --machine-config${normal}=[STRING]
+		Machine configuration tab seperated file.
+		
+		The following columns neet to be included:
+			TASK: Task/job name, described below in more detail.
+			MEM: Integer value for required memmory for indidual tasks in G. 
+			TIME: Time value to be used by slurm for time limits.
+			NTASKS: Integer value for number of caused to be used for individual tasks.
+
+		The following shows the individual task names used in the pipeline:
+			prepare_dirs
+			prepare_reads
+			map_reads
+			sort
+			merge
+			mark_duplicates
+			index
+			unmapped_reads
+			realigner_target_creator
+			indel_realigner
+			first_pass_bqsr
+			print_reads
+			second_pass_bqsr
+			cat_sort_index_bams
+			haplotypecaller
+			cat_gvcf
+			cp_files
+			clean_wd
+
+	${bold}-M, --metrics${normal}=[STRING]
+		Directory of where to place final metrics output.
+
+	${bold}-p, --partition${normal}=[STRING]
+		Lewis partition to use for prcessing. Can be supplied as a comma sepperated list, 
+		eg. Lewis,hpc5
+
+	${bold}-P, --perform${normal}
+		Record performance metrics every second pipeline is running.
+
+	${bold}-r, --ref${normal}=[STRING]
+		Full path to reference genome fasta file.
+
+	${bold}-R, --recal${normal}=[STRING]
+		Full path to varaint database for BQSR. If not specified, BQSR will not be performed.
+
+	${bold}-t, --taskdir${normal}=[STRING]
+		Full path to directory where indivudal tasks are stored.
+
+	${bold}--bwa${normal}=[STRING]
+		BWA module to load. Default is Default is bwa/bwa-0.7.17.
+
+	${bold}--bedtools${normal}=[STRING]
+		Bedtools version to load. Default is bedtools/bedtools-2.26.0.
+
+	${bold}--rversion${normal}=[STRING]
+		R modulel to load. Default is R/R-3.3.3.
+
+	${bold}--samtools${normal}=[STRING]
+		Samtools module to load. Default is samtools/samtools-1.9-test.
+
+	${bold}--picard${normal}=[STRING]
+		Full path to picard tools. 
+		Default is /cluster/software/picard-tools/picard-tools-2.1.1/picard.jar
+
+	${bold}--pigz${normal}=[STRING]
+		Pigz module to load. Default is pigz/pigz-2.4.
+
+	${bold}--gatk${normal}=[STRING]
+		Full path to version 3 GATK program. 
+		Default is /cluster/software/gatk/gatk-3.8/GenomeAnalysisTK.jar.
+"
 exit
 ;;
--a | --account )
+-a | --account=)
 shift; ACCOUNT=$1
 ;;
--A | --array-len )
+-A | --array-len=)
 shift; ARRAYLEN=$1 # An interger value of how to break up the analysis
 ;;
--b | --bam )
+-b | --bam=)
 shift; BAM=$1
 ;;
--c | --config )
+-c | --config=)
 shift; CONFIG=$1
 SM=$(cat $CONFIG | sed '2q;d' | awk {'print $1'}) # pulls out first row of config col 1
 LB=$(echo $(cat $CONFIG | cut -f2) | sed 's/ /,/g') # pulls out entire col 2 and converts to comma sep values
@@ -42,65 +159,65 @@ D1=$(echo $(cat $CONFIG | cut -f8) | sed 's/ /,/g')
 D2=$(echo $(cat $CONFIG | cut -f9) | sed 's/ /,/g')
 runLen=$(expr $(wc -l $CONFIG | cut -d" " -f1) - 1)
 ;;
--C | --cwd )
+-C | --cwd=)
 shift; CWD=$1
 ;;
--e | --email )
+-e | --email=)
 shift; EMAIL=$1
 ;;
--E | --exomes )
+-E | --exomes=)
 shift; EXOME=$1
 ;;
--g | --gvcf )
+-g | --gvcf=)
 shift; GVCF=$1
 ;;
--G | --gap-size )
+-G | --gap-size=)
 shift; GAPSIZE=$1 # for setting the size of gaps where it is ok to break the genome
 ;;
--l | --log )
+-l | --log=)
 shift; LOG=$1
 ;;
--m | --machine-config )
+-m | --machine-config=)
 shift; MACHINE=$1
 ;;
--M | --metrics )
+-M | --metrics=)
 shift; METRICS=$1
 ;;
--p | --partition )
+-p | --partition=)
 shift; PARTITION=$1
 ;;
 -P | --perform )
 PERFORM=true
 ;;
--r | --ref )
+-r | --ref=)
 shift; REF=$1
 ;;
--R | --recal )
+-R | --recal=)
 shift; RECAL=$1
 BQSR=true
 ;;
--t | --taskdir )
+-t | --taskdir=)
 shift; TASKDIR=$1
 ;;
---bwa )
+--bwa=)
 shift; BWAMOD=$1
 ;;
---bedtools )
+--bedtools=)
 shift; BEDTOOLSMOD=$1
 ;;
---rversion )
+--rversion=)
 shift; RMOD=$1
 ;;
---samtools )
+--samtools=)
 shift; SAMTOOLSMOD=$1
 ;;
---picard )
+--picard=)
 shift; PICARD=$1
 ;;
---pigz )
+--pigz=)
 shift; PIGZMOD=$1
 ;;
---gatk )
+--gatk=)
 shift; GATK=$1
 ;;
 esac; shift; done
