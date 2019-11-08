@@ -82,7 +82,7 @@ fi
 
 
 # check if file succesfully uncompressed
-if [[ -s $CWD/$SM/fastq/$R1 && -s $CWD/$SM/fastq/$R2 ]]; then
+if [[ -s $CWD/$SM/fastq/task_$TASK/$R1 && -s $CWD/$SM/fastq/task_$TASK/$R2 ]]; then
 	echo -e "$(date)\nUncompressed read pair files found for task no. $TASK, continuing\n"
 	echo -e "$(date)\t${SLURM_JOB_ID}\tend\tprepare_reads.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
 else
