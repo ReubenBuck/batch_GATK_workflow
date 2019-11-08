@@ -79,7 +79,7 @@ echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tmap_reads.sh\t$SM\t$TASK" &>> $CWD/$SM
 
 echo $RG
 	
-(bwa mem -M -R $RG -t $THREADS $REF $CWD/$SM/fastq/$R1 $CWD/$SM/fastq/$R2 | samtools view -Sb - > $CWD/$SM/bam/$SM.$TASK.bam) 
+(bwa mem -M -R $RG -t $THREADS $REF $CWD/$SM/fastq/task_$TASK/$R1 $CWD/$SM/fastq/task_$TASK/$R2 | samtools view -Sb - > $CWD/$SM/bam/$SM.$TASK.bam) 
 
 
 if [[ $(wc -c <$CWD/$SM/bam/$SM.$TASK.bam) -ge 1000 ]]; then

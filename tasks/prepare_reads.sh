@@ -64,18 +64,20 @@ fi
 module load $SAMTOOLSMOD
 module load $PIGZMOD
 
+mkdir $CWD/$SM/fastq/task_$TASK
 
 if [[ $D2 = *".bam" ]]; then
 	echo -e "$(date)\nData is storred in unaligned bam format, converting to fastq\n"
-	samtools fastq --threads $THREADS -1 $CWD/$SM/fastq/$R1 -2 $CWD/$SM/fastq/$R2 $D1/$D2
+	samtools fastq --threads $THREADS -1 $CWD/$SM/fastq/task_$TASK/$R1 -2 $CWD/$SM/fastq/task_$TASK/$R2 $D1/$D2
 elif [[ $D2 = *".cram" ]]; then
+	mkdir $CWD/$SM/tmp/task_$TASK
 	echo -e "$(date)\nData is storred in cram format, converting to fastq\n"
-	samtools view -@ $THREADS -b -o $CWD/$SM/tmp/${D2/cram/bam} $D1/$D2 
-	samtools fastq --threads $THREADS -1 $CWD/$SM/fastq/$R1 -2 $CWD/$SM/fastq/$R2 $CWD/$SM/tmp/${D2/cram/bam}
+	samtools view -@ $THREADS -b -o $CWD/$SM/tmp/task_$TASK/${D2/cram/bam} $D1/$D2 
+	samtools fastq --threads $THREADS -1 $CWD/$SM/fastq/task_$TASK/$R1 -2 $CWD/$SM/fastq/task_$TASK/$R2 $CWD/$SM/tmp/${D2/cram/bam}
 else
 	echo -e "$(date)\nData is likely storred as compressed fastq, uncompressing\n"
-	pigz -cd -p $THREADS $D1/$R1.gz > $CWD/$SM/fastq/$R1
-	pigz -cd -p $THREADS $D2/$R2.gz > $CWD/$SM/fastq/$R2
+	pigz -cd -p $THREADS $D1/$R1.gz > $CWD/$SM/fastq/task_$TASK/$R1
+	pigz -cd -p $THREADS $D2/$R2.gz > $CWD/$SM/fastq/task_$TASK/$R2
 fi
 
 
