@@ -21,6 +21,8 @@ shift; MEM=$1
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
+echo -e "Node: $(hostname)\n"
+
 module load $SAMTOOLSMOD
 
 TASK=${SLURM_ARRAY_TASK_ID}

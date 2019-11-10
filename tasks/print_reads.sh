@@ -30,6 +30,8 @@ shift; THREADS=$1
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
+echo -e "Node: $(hostname)\n"
+
 sleep $((RANDOM % 10))
 
 module load $JAVAMOD

@@ -23,6 +23,7 @@ if [[ "$1" == '--' ]]; then shift; fi
 
 module load $JAVAMOD
 
+echo -e "Node: $(hostname)\n"
 
 if [[ $PERFORM = true ]]; then
     echo -e "$(date): mark_duplicates.sh is running on $(hostname)" &>> $CWD/$SM/metrics/perform_mark_duplicates_$SM.txt

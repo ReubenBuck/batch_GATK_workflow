@@ -1,4 +1,7 @@
 #!/bin/bash
+
+echo -e "Node: $(hostname)\n"
+
 while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
 --sample )
 shift; SM=$1

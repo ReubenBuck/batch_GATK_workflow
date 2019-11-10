@@ -104,7 +104,7 @@ shift; GAPSIZE=$1
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
-
+echo -e "Node: $(hostname)\n"
 
 #clean and establish the working dir
 if [[ ! -z $(ls $CWD/$SM/) ]]; then

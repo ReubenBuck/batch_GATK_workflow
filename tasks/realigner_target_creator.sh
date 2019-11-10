@@ -27,6 +27,8 @@ shift; MEM=$1
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
+echo -e "Node: $(hostname)\n"
+
 module load $JAVAMOD
 if [[ $PERFORM = true ]]; then
     echo -e "$(date): indel_target_creator.sh is running on $(hostname)" &>> $CWD/$SM/metrics/perform_indel_target_creator_$SM.txt

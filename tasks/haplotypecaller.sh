@@ -35,6 +35,8 @@ if [[ "$1" == '--' ]]; then shift; fi
 
 sleep $((RANDOM % 10))
 
+echo -e "Node: $(hostname)\n"
+
 module load $JAVAMOD
 
 TASK=$(seq -f "%05g" ${SLURM_ARRAY_TASK_ID} ${SLURM_ARRAY_TASK_ID})

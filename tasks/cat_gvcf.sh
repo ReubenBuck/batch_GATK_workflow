@@ -30,6 +30,9 @@ shift; ARRAYLEN=$1
 esac; shift; done
 if [[ "$1" == '--' ]]; then shift; fi
 
+
+echo -e "Node: $(hostname)\n"
+
 module load $JAVAMOD
 
 TASKS=$(echo $(seq -f "%05g" 1 $ARRAYLEN) | sed 's/ /,/g')

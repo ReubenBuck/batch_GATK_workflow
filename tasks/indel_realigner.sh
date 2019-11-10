@@ -28,6 +28,8 @@ module load $JAVAMOD
 
 sleep $((RANDOM % 10))
 
+echo -e "Node: $(hostname)\n"
+
 TASK=$(seq -f "%05g" ${SLURM_ARRAY_TASK_ID} ${SLURM_ARRAY_TASK_ID})
 TARGET=$SM.$TASK.bed
 
