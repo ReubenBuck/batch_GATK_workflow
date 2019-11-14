@@ -58,34 +58,21 @@ fi
 
 TASKS=$(echo $(seq -f "%05g" 1 $ARRAYLEN) | sed 's/ /,/g')
 
-echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tcat_sort_index_bams.sh-concat\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tcat_sort_index_bams.sh-merge\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
-eval samtools cat -o $CWD/$SM/bam/$SM.$inStatus.cat.bam $CWD/$SM/bam/$SM.{$(echo $TASKS)}.$inStatus.bam
+eval samtools merge -c -f --threads $THREADS $CWD/$SM/bam/$SM.$inStatus.bam $CWD/$SM/bam/$SM.{$(echo $TASKS)}.$inStatus.bam
 
-if [[ -s $CWD/$SM/bam/$SM.$inStatus.cat.bam ]]; then
-    echo -e "$(date)\t${SLURM_JOB_ID}\tend\tcat_sort_index_bams.sh-concat\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+
+if [[ $(wc -c <$CWD/$SM/bam/$SM.$inStatus.bam) -ge 1000 ]]; then
+    echo -e "$(date)\t${SLURM_JOB_ID}\tend\tcat_sort_index_bams.sh-merge\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tcat_sort_index_bams.sh-concat\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+    echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tcat_sort_index_bams.sh-merge\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
     scancel -n $SM
     scancel -n ${SM}-unmapped
     scancel -n ${SM}-recal-plots
     scancel -n ${SM}-cat-bams
 fi
 
-
-echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tcat_sort_index_bams.sh-sort\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
-
-samtools sort -m $(( MEM*1000/THREADS/100*95 ))M --threads $THREADS -o $CWD/$SM/bam/$SM.$inStatus.bam $CWD/$SM/bam/$SM.$inStatus.cat.bam
-
-if [[ -s $CWD/$SM/bam/$SM.$inStatus.bam ]]; then
-    echo -e "$(date)\t${SLURM_JOB_ID}\tend\tcat_sort_index_bams.sh-sort\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
-else
-    echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tcat_sort_index_bams.sh-sort\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
-    scancel -n $SM
-    scancel -n ${SM}-unmapped
-    scancel -n ${SM}-recal-plots
-    scancel -n ${SM}-cat-bams
-fi
 
 
 echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tcat_sort_index_bams.sh-index\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
