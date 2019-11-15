@@ -94,6 +94,7 @@ echo $(cut -f1 -d' ' $BAM/$SM.unmap.bam.md5) $BAM/$SM.unmap.bam > $CWD/$SM/tmp/$
 echo $(cut -f1 -d' ' $BAM/$SM.halfmap.bam.md5) $BAM/$SM.halfmap.bam > $CWD/$SM/tmp/$SM.final.halfmap.md5
 echo $(cut -f1 -d' ' $GVCF/$SM.g.vcf.gz.md5) $GVCF/$SM.g.vcf.gz > $CWD/$SM/tmp/$SM.final.gvcf.md5
 
+echo "" > $CWD/$SM/log/$SM.final.check.txt
 
 md5sum -c $CWD/$SM/tmp/$SM.final.bam.md5 >> $CWD/$SM/log/$SM.final.check.txt &
 md5sum -c $CWD/$SM/tmp/$SM.final.unmap.md5 >> $CWD/$SM/log/$SM.final.check.txt &
@@ -113,6 +114,7 @@ else
 	rm $BAM/$SM.* $GVCF/$SM.*
 	scancel $SM
 	sleep 10s
+	exit
 fi
 
 if [[ -d $LOG/$SM ]]; then
