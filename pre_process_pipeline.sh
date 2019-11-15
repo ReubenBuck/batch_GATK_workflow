@@ -370,7 +370,7 @@ indel_realignerNTASKS=$(cat $MACHINE | grep indel_realigner | cut -f 4)
 CATBAMID=$(sbatch \
 --mem=${indel_realignerMEM}G --time=${indel_realignerTIME} --nodes=1 --ntasks=${indel_realignerNTASKS} \
 --array=1-$ARRAYLEN \
---job-name=$SM --account=$ACCOUNT --partition=$PARTITION $EXCLUSIVE -d singleton \
+--job-name=$SM --account=$ACCOUNT --partition=hpc4,hpc5 $EXCLUSIVE -d singleton \
 --mail-user=$EMAIL --mail-type=FAIL --output=$CWD/$SM/log/indel_realigner-${SM}-%A-%a-%j.out \
 $TASKDIR/indel_realigner.sh --sample $SM \
 --workdir $CWD --gatk $GATK --java $JAVAMOD --ref $REF --perform $PERFORM \
