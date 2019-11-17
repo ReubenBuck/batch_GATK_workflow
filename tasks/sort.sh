@@ -39,7 +39,7 @@ fi
 
 # sort
 echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tsort.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
-samtools sort --threads $THREADS -m $(( MEM*1000/THREADS/100*95 ))M -o $CWD/$SM/bam/$SM.$TASK.sort.bam $CWD/$SM/bam/$SM.$TASK.bam
+samtools sort --threads $THREADS -m $(( MEM*1000/THREADS/100*90 ))M -o $CWD/$SM/bam/$SM.$TASK.sort.bam $CWD/$SM/bam/$SM.$TASK.bam
 
 
 if [[ $(wc -c <$CWD/$SM/bam/$SM.$TASK.sort.bam) -ge 1000 ]]; then
