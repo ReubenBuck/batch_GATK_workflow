@@ -38,8 +38,8 @@ fi
 
 
 # clean sort dir
-if [[ $(ls $CWD/$SM/bam | grep "sort.bam.tmp" | wc -l) -gt 0 ]]; then 
-	rm *sort.bam.tmp* 
+if [[ $(ls $CWD/$SM/bam/ | grep "$SM.$TASK.sort.bam.tmp" | wc -l) -gt 0 ]]; then 
+	rm $CWD/$SM/bam/$SM.$TASK.sort.bam.tmp* 
 fi
 
 # sort
