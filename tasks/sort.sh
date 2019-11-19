@@ -37,6 +37,11 @@ if [[ $PERFORM = true ]]; then
 fi
 
 
+# clean sort dir
+if [[ $(ls $CWD/$SM/bam | grep "sort.bam.tmp" | wc -l) -gt 0 ]]; then 
+	rm *sort.bam.tmp* 
+fi
+
 # sort
 echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tsort.sh\t$SM\t$TASK" &>> $CWD/$SM/log/$SM.run.log
 samtools sort --threads $THREADS -m $(( MEM*1000/THREADS/100*90 ))M -o $CWD/$SM/bam/$SM.$TASK.sort.bam $CWD/$SM/bam/$SM.$TASK.bam
