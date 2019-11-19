@@ -55,7 +55,7 @@ echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tcat_gvcf.sh\t$SM\t" &>> $CWD/$SM/log/$
 
 VAR=$(eval echo -e "I=$CWD/$SM/gvcf/$SM.{$(echo $TASKS)}.g.vcf.gz")
 
-java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx$(( MEM*1000/100*95 ))M -jar $PICARD SortVcf $VAR O=$CWD/$SM/gvcf/$SM.g.vcf.gz
+java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx$(( MEM*1000/100*95 ))M -jar $PICARD MergeVcfs $VAR O=$CWD/$SM/gvcf/$SM.g.vcf.gz
 
 if [[ -s $CWD/$SM/gvcf/$SM.g.vcf.gz ]]; then
     echo -e "$(date)\t${SLURM_JOB_ID}\tend\tcat_gvcf.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
