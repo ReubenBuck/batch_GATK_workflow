@@ -4,6 +4,7 @@ BQSR=false
 PERFORM=false
 GAPSIZE=100
 ARRAYLEN=10
+RECAL=false
 
 SAMTOOLSMOD=samtools/samtools-1.9-test
 GATK=/cluster/software/gatk/gatk-3.8/GenomeAnalysisTK.jar
@@ -266,7 +267,7 @@ sbatch \
 $TASKDIR/prepare_reads.sh --sample $SM \
 --read1 $R1 --read2 $R2 --path1 $D1 --path2 $D2 --threads ${prepare_readsNTASKS} \
 --workdir $CWD --pigz $PIGZMOD \
---samtools $SAMTOOLSMOD --perform $PERFORM \
+--samtools $SAMTOOLSMOD --perform $PERFORM
 
 
 map_readsMEM=$(cat $MACHINE | grep map_reads | cut -f 2)

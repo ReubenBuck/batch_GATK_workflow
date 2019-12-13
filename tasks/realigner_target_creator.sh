@@ -47,7 +47,7 @@ java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx$(( MEM*1000/100*95 ))M -jar $GATK \
 -o $CWD/$SM/fastq/$SM.indelTarget.intervals
 
 
-if [[ $(wc -c <$CWD/$SM/fastq/$SM.indelTarget.intervals) -ge 1000 ]]; then
+if [[ $(wc -c <$CWD/$SM/fastq/$SM.indelTarget.intervals) -ge 10 ]]; then
     echo -e "$(date)\t${SLURM_JOB_ID}\tend\trealigner_target_creator.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 else
     echo -e "$(date)\t${SLURM_JOB_ID}\tfail\trealigner_target_creator.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log

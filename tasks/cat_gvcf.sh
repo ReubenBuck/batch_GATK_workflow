@@ -53,16 +53,21 @@ fi
 
 echo -e "$(date)\t${SLURM_JOB_ID}\tbegin\tcat_gvcf.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 
-VAR=$(eval echo -e "I=$CWD/$SM/gvcf/$SM.{$(echo $TASKS)}.g.vcf.gz")
 
-java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx$(( MEM*1000/100*95 ))M -jar $PICARD MergeVcfs $VAR O=$CWD/$SM/gvcf/$SM.g.vcf.gz
+if [[ $(ls $CWD/$SM/gvcf/$SM.*.g.vcf.gz | wc -l) -gt 2 ]]; then
+	VAR=$(eval echo -e "I=$CWD/$SM/gvcf/$SM.{$(echo $TASKS)}.g.vcf.gz")
+	java -Djava.io.tmpdir=$CWD/$SM/tmp -Xmx$(( MEM*1000/100*95 ))M -jar $PICARD MergeVcfs $VAR O=$CWD/$SM/gvcf/$SM.g.vcf.gz
+else
+	mv $CWD/$SM/gvcf/$SM.00001.g.vcf.gz $CWD/$SM/gvcf/$SM.g.vcf.gz
+	mv $CWD/$SM/gvcf/$SM.00001.g.vcf.gz.tbi $CWD/$SM/gvcf/$SM.g.vcf.gz.tbi
+fi
 
 if [[ -s $CWD/$SM/gvcf/$SM.g.vcf.gz ]]; then
-    echo -e "$(date)\t${SLURM_JOB_ID}\tend\tcat_gvcf.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+	echo -e "$(date)\t${SLURM_JOB_ID}\tend\tcat_gvcf.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
 else
-    echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tcat_gvcf.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
-    scancel -n $SM
-    scancel -n ${SM}-unmapped
+	echo -e "$(date)\t${SLURM_JOB_ID}\tfail\tcat_gvcf.sh\t$SM\t" &>> $CWD/$SM/log/$SM.run.log
+	scancel -n $SM
+	scancel -n ${SM}-unmapped
 	scancel -n ${SM}-recal-plots
 	scancel -n ${SM}-cat-bams
 fi

@@ -133,6 +133,9 @@ echo ${SLURM_JOB_ID}
 
 echo -e "prepare_dirs.sh is running on $(hostname)" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
 
+PERFORM=false
+
+
 # here we can start measuring performance stats
 echo -e "\n\n$(date)\nChecks for performance\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
 if [[ $PERFORM = true ]]; then
@@ -355,16 +358,6 @@ else
     scancel -n ${SM}-cat-bams
 fi
 
-# check if targets exist
-if [[ -d ${REF%/*}/target_loci/ ]]; then
-    echo -e "$(date)\ntarget_loci dir found\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
-else
-    echo -e "$(date)\ntarget_loci dir not found, exiting\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
-    scancel -n $SM
-    scancel -n ${SM}-unmapped
-    scancel -n ${SM}-recal-plots
-    scancel -n ${SM}-cat-bams
-fi 
 
 # check if recal db exists if recal is required
 echo -e "\n\n$(date)\nChecks for BQSR\n" &>> $CWD/$SM/log/prepare_dirs-${SM}.out
